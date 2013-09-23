@@ -12,18 +12,6 @@ namespace MusicWall3D
     using SharpDX.Toolkit.Graphics;
     using SharpDX.Toolkit.Input;
 
-    public class GameObject
-    {
-        public Vector3 pos;
-        public Vector3 vel;
-        public Matrix rot;
-        public Vector3 scale;
-        public Color col;
-        public float lifetime;
-        public GeometricPrimitive primitive;
-    };
-
-
     public class MusicWall3D : Game
     {
         private GraphicsDeviceManager graphicsDeviceManager;
@@ -56,8 +44,10 @@ namespace MusicWall3D
         private bool drawingStarted = false;
         private float lastEvent = 0.0f;
 
-        private const float frequency = 0.1f;
+        private const float frequency = 0.05f;
         private const float pointFrequency = 0.005f;
+
+        private Color[] colorList = new Color[] {Color.Green,Color.Goldenrod,Color.Red };
 
         public MusicWall3D()
         {
@@ -70,6 +60,7 @@ namespace MusicWall3D
 
             objects = new List<List<Vector2>>();
             splines = new List<CubicSpline>();
+
         }
 
         protected override void Initialize()
@@ -206,30 +197,24 @@ namespace MusicWall3D
 
                     for (int j = 0; j < xs.Count; j++)
                     {
-                        Vector3 translation = Vector3.TransformCoordinate(new Vector3((xs[j] * 2.0f - 1.0f) * (float)GraphicsDevice.BackBuffer.Width * (1.0f / aspectRatio), (ys[j] * -2.0f + 1.0f) * (float)GraphicsDevice.BackBuffer.Height, 0.0f), viewProjInverse);
-                        translation.Z = 5.0f;
-
                         basicEffect.World = Matrix.Scaling(2.0f, 0.5f, 2.0f) *
                                     Matrix.RotationX(deg2rad(90.0f)) *
                                     Matrix.RotationY(0) *
                                     Matrix.RotationZ(0) *
-                                    Matrix.Translation(translation);
-                        basicEffect.DiffuseColor = (Vector4)Color.SmoothStep(Color.Tan, Color.OrangeRed, ys[j]);
+                                    Matrix.Translation(screenToWorld(new Vector3(xs[j], ys[j], 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                        basicEffect.DiffuseColor = (Vector4)pickColor(ys[j]);
                         primitive.Draw(basicEffect);
                     }
                 }
 
                 for (int i = 0; i < currentPoints.Count; i++)
                 {
-                    Vector3 translation = Vector3.TransformCoordinate(new Vector3((currentPoints[i].X * 2.0f - 1.0f) * (float)GraphicsDevice.BackBuffer.Width * (1.0f / aspectRatio), (currentPoints[i].Y * -2.0f + 1.0f) * (float)GraphicsDevice.BackBuffer.Height, 0.0f), viewProjInverse);
-                    translation.Z = 5.0f;
-
                     basicEffect.World = Matrix.Scaling(2.0f, 0.5f, 2.0f) *
                                 Matrix.RotationX(deg2rad(90.0f)) *
                                 Matrix.RotationY(0) *
                                 Matrix.RotationZ(0) *
-                                Matrix.Translation(translation);
-                    basicEffect.DiffuseColor = (Vector4)Color.SmoothStep(Color.Black, Color.OrangeRed, currentPoints[i].Y);
+                                Matrix.Translation(screenToWorld(new Vector3(currentPoints[i], 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                    basicEffect.DiffuseColor = (Vector4)pickColor(currentPoints[i].Y);
                     primitive.Draw(basicEffect);
                 }
 
@@ -254,46 +239,23 @@ namespace MusicWall3D
 
                     for (int j = 0; j < xs.Count; j++)
                     {
-                        Vector3 translation = Vector3.TransformCoordinate(new Vector3((xs[j] * 2.0f - 1.0f) * (float)GraphicsDevice.BackBuffer.Width * (1.0f / aspectRatio), (ys[j] * -2.0f + 1.0f) * (float)GraphicsDevice.BackBuffer.Height, 0.0f), viewProjInverse);
-                        translation.Z = 5.0f;
-
                         basicEffect.World = Matrix.Scaling(2.0f, 0.5f, 2.0f) *
                                     Matrix.RotationX(deg2rad(90.0f)) *
                                     Matrix.RotationY(0) *
                                     Matrix.RotationZ(0) *
-                                    Matrix.Translation(translation);
-                        basicEffect.DiffuseColor = (Vector4)Color.SmoothStep(Color.Tan, Color.OrangeRed, ys[j]);
+                                    Matrix.Translation(screenToWorld(new Vector3(xs[j], ys[j], 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                        basicEffect.DiffuseColor = (Vector4)pickColor(ys[j]);
                         primitive.Draw(basicEffect);
                     }
                 }
-
-            Vector3 trans = Vector3.TransformCoordinate(new Vector3((mouseState.X * 2.0f - 1.0f) * (float)GraphicsDevice.BackBuffer.Width * (1.0f / aspectRatio), (mouseState.Y * -2.0f + 1.0f) * (float)GraphicsDevice.BackBuffer.Height, 0.0f), viewProjInverse);
-            trans.Z = 5.0f;
 
             basicEffect.World = Matrix.Scaling(2.0f, 0.5f, 2.0f) *
                                 Matrix.RotationX(deg2rad(90.0f)) *
                                 Matrix.RotationY(0) *
                                 Matrix.RotationZ(0) *
-                                Matrix.Translation(trans);
-            basicEffect.DiffuseColor = drawingStarted ? (Vector4)Color.SmoothStep(Color.Tan, Color.OrangeRed, mouseState.Y) : (Vector4)Color.SmoothStep(Color.ForestGreen, Color.Azure, 0.5f * ((float)Math.Sin(gameTime.TotalGameTime.Seconds * 0.5f) + 1.0f));
+                                Matrix.Translation(screenToWorld(new Vector3(mouseState.X,mouseState.Y,5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
+            basicEffect.DiffuseColor = (Vector4)pickColor(mouseState.Y);
             primitive.Draw(basicEffect);
-
-            spriteBatch.Begin();
-            var text = new StringBuilder();
-
-            var pressedKeys = keyboardState.GetPressedKeys();
-            text.Append("Key Pressed: [");
-            foreach (var key in pressedKeys)
-            {
-                text.Append(key.ToString());
-                text.Append(" ");
-            }
-            text.Append("]").AppendLine();
-
-            text.AppendFormat("Mouse ({0},{1}) Left: {2}, Right {3}", mouseState.X, mouseState.Y, mouseState.Left, mouseState.Right).AppendLine();
-
-            spriteBatch.DrawString(arial16Font, text.ToString(), new Vector2(16, 16), Color.White);
-            spriteBatch.End();
 
             GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
             GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
@@ -342,6 +304,32 @@ namespace MusicWall3D
         private float deg2rad(float angle)
         {
             return angle / 180.0f * (float)Math.PI;
+        }
+
+        private Color pickColor(float ratio)
+        {
+            if (colorList == null) return Color.Black;
+
+            if (float.IsNaN(ratio)) return colorList[0];
+
+            if (ratio >= 1.0f) return colorList[colorList.Count() - 1];
+
+            if (ratio < 0.0f) return colorList[0];
+
+            float scaled = ratio * (colorList.Count()-1);
+            int firstIndex = (int)Math.Floor(scaled);
+            int secondIndex = (int)Math.Ceiling(scaled);
+            float mix = scaled - firstIndex;
+
+            return Color.SmoothStep(colorList[firstIndex], colorList[secondIndex], mix);
+        }
+
+        private Vector3 screenToWorld(Vector3 coord, Matrix view, Matrix proj, Matrix world, ViewportF screen)
+        {
+            Vector3 near = screen.Unproject(new Vector3(coord.X * screen.Width, coord.Y * screen.Height, 0.0f), proj, view, world);
+            Vector3 far = screen.Unproject(new Vector3(coord.X * screen.Width, coord.Y * screen.Height, 1.0f), proj, view, world);
+            
+            return near + (far-near)*0.1f;
         }
     }
 }
