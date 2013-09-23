@@ -46,6 +46,7 @@ namespace MusicWall3D
 
         private const float frequency = 0.05f;
         private const float pointFrequency = 0.005f;
+        private const float minDistance = 0.002f;
 
         private Color[] colorList = new Color[] {Color.Green,Color.Goldenrod,Color.Red };
 
@@ -135,7 +136,10 @@ namespace MusicWall3D
 
                     lastEvent = (float)gameTime.TotalGameTime.TotalSeconds;
 
+                    currentPoints.RemoveAll((Vector2 a) => Math.Abs(mouseState.X - a.X) < minDistance);
+                    
                     currentPoints.Add(new Vector2(mouseState.X, mouseState.Y));
+
                     currentPoints.Sort((Comparison<Vector2>)delegate(Vector2 a, Vector2 b) { return a.X.CompareTo(b.X); });
 
                     float[] xs = new float[currentPoints.Count];
