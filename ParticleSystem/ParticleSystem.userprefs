@@ -1,0 +1,29 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="ParticleSystem\Program.cs">
+    <Files>
+      <File FileName="ParticleSystem\Program.cs" Line="41" Column="32" />
+      <File FileName="ParticleLibrary\Particle.cs" Line="6" Column="3" />
+      <File FileName="ParticleLibrary\ParticleType.cs" Line="6" Column="26" />
+      <File FileName="ParticleLibrary\Glitter.cs" Line="9" Column="21" />
+      <File FileName="ParticleLibrary\Star.cs" Line="9" Column="21" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="ParticleLibrary" expanded="True">
+            <Node name="References" expanded="True" />
+          </Node>
+          <Node name="ParticleSystem" expanded="True">
+            <Node name="References" expanded="True" />
+            <Node name="Program.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

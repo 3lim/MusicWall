@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParticleSystem", "ParticleSystem\ParticleSystem.csproj", "{662E9E02-3B28-484F-9481-3037B8AE30CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParticleLibrary", "ParticleLibrary\ParticleLibrary.csproj", "{4708833A-9D81-4CD4-8179-4C3A65B8C76A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4708833A-9D81-4CD4-8179-4C3A65B8C76A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4708833A-9D81-4CD4-8179-4C3A65B8C76A}.Debug|x86.Build.0 = Debug|Any CPU
+		{4708833A-9D81-4CD4-8179-4C3A65B8C76A}.Release|x86.ActiveCfg = Release|Any CPU
+		{4708833A-9D81-4CD4-8179-4C3A65B8C76A}.Release|x86.Build.0 = Release|Any CPU
+		{662E9E02-3B28-484F-9481-3037B8AE30CC}.Debug|x86.ActiveCfg = Debug|x86
+		{662E9E02-3B28-484F-9481-3037B8AE30CC}.Debug|x86.Build.0 = Debug|x86
+		{662E9E02-3B28-484F-9481-3037B8AE30CC}.Release|x86.ActiveCfg = Release|x86
+		{662E9E02-3B28-484F-9481-3037B8AE30CC}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = ParticleSystem\ParticleSystem.csproj
+	EndGlobalSection
+EndGlobal

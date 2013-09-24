@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{662E9E02-3B28-484F-9481-3037B8AE30CC}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ParticleSystem</RootNamespace>
+    <AssemblyName>ParticleSystem</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Externalconsole>true</Externalconsole>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Externalconsole>true</Externalconsole>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="SharpDX">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.D3DCompiler">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.D3DCompiler.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.RawInput">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.RawInput.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Toolkit">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Toolkit.CompilerTask">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Toolkit.CompilerTask.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Toolkit.Game">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Toolkit.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Toolkit.Graphics">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Toolkit.Graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Toolkit.Input">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Toolkit.Input.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.XInput">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.XInput.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\ParticleLibrary\ParticleLibrary.csproj">
+      <Project>{4708833A-9D81-4CD4-8179-4C3A65B8C76A}</Project>
+      <Name>ParticleLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
