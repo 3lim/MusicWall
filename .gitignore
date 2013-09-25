@@ -7,3 +7,7 @@
 /ParticleSystem/ParticleSystem/obj
 /ParticleSystem/ParticleLibrary/obj
 /ParticleSystem/ParticleLibrary/bin
+*.suo
+*.userprefs
+/bin
+/obj
