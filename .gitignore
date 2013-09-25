@@ -1,3 +1,9 @@
 /MusicWall3D/MusicWall3D/bin
 /MusicWall3D/MusicWall3D/obj
 /MusicWall3D/*.suo
+/ParticleSystem/*.userprefs
+/ParticleSystem/*.suo
+/ParticleSystem/ParticleSystem/bin
+/ParticleSystem/ParticleSystem/obj
+/ParticleSystem/ParticleLibrary/obj
+/ParticleSystem/ParticleLibrary/bin
