@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SharpDX;
 using TestMySpline;
-using KinectLibrary;
+//using KinectLibrary;
 using System.Diagnostics;
 using ParticleLibrary;
 
@@ -55,7 +55,7 @@ namespace MusicWall3D
 
         private ParticleSystem pSystem;// a particle system
 
-        private Kinect kinect = new Kinect();
+        //private Kinect kinect = new Kinect();
         private const float kinectUpdateFrequency = 0.2f;
         private float lastKinectDataTime = 0.0f;
 
@@ -82,10 +82,10 @@ namespace MusicWall3D
 
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
             pSystem = new ParticleSystem(graphicsDeviceManager);
-            for (int i = 0; i < 30; i++)
+            /*for (int i = 0; i < 50; i++)
             {
                 pSystem.addParticle(0, 0);
-            }
+            }*/
 
             objects = new List<List<Vector2>>();
             splines = new List<CubicSpline>();
@@ -102,7 +102,7 @@ namespace MusicWall3D
             Window.IsMouseVisible = true;
             Window.AllowUserResizing = true;
 
-            kinect.Initialize();
+            //kinect.Initialize();
 
             base.Initialize();
         }
@@ -146,7 +146,7 @@ namespace MusicWall3D
         {
             base.Update(gameTime);
             //TODO
-            PlaySounds();
+            PlaySounds();            
 
             view = Matrix.LookAtLH(new Vector3(0.0f, 0.0f, -7.0f), new Vector3(0, 0.0f, 0), Vector3.UnitY);
             projection = Matrix.PerspectiveFovLH(0.9f, (float)GraphicsDevice.BackBuffer.Width / GraphicsDevice.BackBuffer.Height, 0.1f, 100.0f);
@@ -157,7 +157,7 @@ namespace MusicWall3D
             keyboardState = keyboard.GetState();
             mouseState = mouse.GetState();
 
-            position.X = (float)kinect.xYDepth.X * - 1.0f;
+            /*position.X = (float)kinect.xYDepth.X * - 1.0f;
             position.Y = (float)kinect.xYDepth.Y;
             position.Z = (float)kinect.xYDepth.Z;
 
@@ -189,7 +189,7 @@ namespace MusicWall3D
             {
                 rightDown = new Vector3((float)kinect.xYDepth.X, (float)kinect.xYDepth.Y, (float)kinect.xYDepth.Z);
                 Console.WriteLine(rightDown);
-            }
+            }*/
 
             if (mouseState.Right == ButtonState.Pressed)
             {
@@ -241,6 +241,9 @@ namespace MusicWall3D
             }
 
             /**PARTICLE UPDATE********************************************************************/
+            addParticles();
+            pSystem.addParticle(0, 0);
+
             List<Particle> remove = new List<Particle>();
             foreach (Particle p in pSystem.getList())
             {
@@ -257,8 +260,7 @@ namespace MusicWall3D
             }
             foreach (Particle p in remove)
             {
-                pSystem.removeParticle(p);
-                pSystem.addParticle(0, 0);
+                pSystem.removeParticle(p);                
             }
             remove.Clear();
 
@@ -288,6 +290,31 @@ namespace MusicWall3D
             }
         }
 
+        private void addParticles()
+        {
+            TimeSpan tmp = stopWatch.Elapsed;
+            if (lastUpdate.Seconds != tmp.Seconds)
+            {                
+                lastUpdate = tmp;
+                float last, first;
+                foreach (List<Vector2> list in objects)
+                {
+                    first = list[0][0] - 0.05f;
+                    last = (list.Last()[0]) + 0.05f;
+                    if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
+                    {
+                        float x = list[0].X;
+                        float y = list[0].Y;
+
+                        pSystem.addParticle(x, y);
+                    }
+                    Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
+                    Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
+                    Debug.WriteLine(0.5f);
+                }
+            }
+        }
+
 
         protected override void Draw(GameTime gameTime)
         {
@@ -305,13 +332,13 @@ namespace MusicWall3D
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
-                GeometricPrimitive g = ToDisposeContent(GeometricPrimitive.Sphere.New(GraphicsDevice));//p.getShape();
+                GeometricPrimitive g = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));//p.getShape();
 
-                basicEffect.World = Matrix.Scaling(0.5f, 0.5f, 0.5f) *
+                basicEffect.World = Matrix.Scaling(0.3f, 0.1f, 0.3f) *
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
-                    Matrix.Translation(new Vector3(p.getX(), p.getY() + (0.05f), 0));
+                    Matrix.Translation(new Vector3(p.getX(), p.getY(), 0));
 
                 Color4 color = p.getColor();
                 basicEffect.DiffuseColor = color;

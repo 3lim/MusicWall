@@ -27,12 +27,12 @@ namespace ParticleLibrary
 
         public GraphicsDeviceManager graphicsDeviceManager;
 
-		public Particle (int x, int y, int life, GraphicsDeviceManager gdm, int seed)
+		public Particle (float x, float y, int life, GraphicsDeviceManager gdm, int seed)
 		{
             ran = new Random(seed);
             graphicsDeviceManager = gdm;
 			this.xpos = x + ran.NextFloat(-0.2f, 0.2f);
-            this.ypos = y + ran.NextFloat(-0.3f, 0.3f);
+            this.ypos = y + ran.NextFloat(-0.5f, 0.5f);
             lifespan = life;            
 		}
 

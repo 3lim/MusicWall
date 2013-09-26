@@ -4,3 +4,9 @@ C:\Users\plundahl\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\bin\Deb
 C:\Users\plundahl\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\bin\Debug\OpenNI.Net.dll
 C:\Users\plundahl\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\obj\Debug\KinectLibrary.dll
 C:\Users\plundahl\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\obj\Debug\KinectLibrary.pdb
+C:\Users\Veronica\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\bin\Debug\KinectLibrary.dll
+C:\Users\Veronica\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\bin\Debug\KinectLibrary.pdb
+C:\Users\Veronica\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\bin\Debug\OpenNI.Net.dll
+C:\Users\Veronica\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\obj\Debug\KinectLibrary.csprojResolveAssemblyReference.cache
+C:\Users\Veronica\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\obj\Debug\KinectLibrary.dll
+C:\Users\Veronica\Documents\GitHub\MusicWall\KinectLibrary\KinectLibrary\obj\Debug\KinectLibrary.pdb
