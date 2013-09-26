@@ -1,0 +1,3 @@
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common\bin\x86\Release\Bespoke.Common.XML
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common\bin\x86\Release\Bespoke.Common.dll
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common\obj\x86\Release\Bespoke.Common.dll

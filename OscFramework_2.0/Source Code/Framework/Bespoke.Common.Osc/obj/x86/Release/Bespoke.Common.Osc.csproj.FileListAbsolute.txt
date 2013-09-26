@@ -1,0 +1,6 @@
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common.Osc\bin\x86\Release\Bespoke.Common.Osc.XML
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common.Osc\bin\x86\Release\Bespoke.Common.Osc.dll
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common.Osc\bin\x86\Release\Bespoke.Common.dll
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common.Osc\bin\x86\Release\Bespoke.Common.xml
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common.Osc\obj\x86\Release\Bespoke.Common.Osc.csprojResolveAssemblyReference.cache
+C:\Users\plundahl\Documents\SoundWall\OscFramework_2.0\Source Code\Framework\Bespoke.Common.Osc\obj\x86\Release\Bespoke.Common.Osc.dll

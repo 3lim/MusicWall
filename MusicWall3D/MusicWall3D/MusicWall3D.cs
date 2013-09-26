@@ -163,6 +163,11 @@ namespace MusicWall3D
 
                 currentPoints = new List<Vector2>();
                 currentSpline = new CubicSpline();
+
+                //TO DO
+                //Remove this code, it's just for testing sound.
+                Sound sound = new Sound();
+                sound.play(0);
             }
         }
 
