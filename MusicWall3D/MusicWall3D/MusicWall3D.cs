@@ -167,7 +167,7 @@ namespace MusicWall3D
                 //TO DO
                 //Remove this code, it's just for testing sound.
                 Sound sound = new Sound();
-                sound.play(0);
+                sound.Play(mouseState.Y);
             }
         }
 

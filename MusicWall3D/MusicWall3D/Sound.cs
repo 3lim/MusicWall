@@ -17,21 +17,38 @@ namespace MusicWall3D
             private Thread mTransmitterThread;
             private OscPacket mPacket;
 
-            //Function for playing the right notes at the right time.
-            public void play(int time)
+            //Takes a mouseState.Y (float between 0 and 1) and playes a tune.
+            public void Play(float Y)
             {
-                Kick();
+                Y = Y * 100;
+                if (Y > 90)
+                    Kick();
+                else if (Y > 80)
+                    Snare();
+                else
+                    Note(10 * (100 - (int)Y));
             }
 
 
-            public void Kick()
+            private void Kick()
             {
                 OscMessage message = new OscMessage(Destination, "/soundWall/kick");
                 //message.Append(333);
                 sendOsc(message);
             }
+            private void Snare()
+            {
+                OscMessage message = new OscMessage(Destination, "/soundWall/snare");
+                sendOsc(message);
+            }
+            private void Note(int freq)
+            {
+                OscMessage message = new OscMessage(Destination, "/soundWall/note");
+                message.Append(freq);
+                sendOsc(message);
+            }
 
-            public void sendOsc(OscMessage message)
+            private void sendOsc(OscMessage message)
             {
                 OscBundle bundle = new OscBundle(Destination); 
                 bundle.Append(message);
