@@ -20,19 +20,21 @@
 *                                                                           *
 ****************************************************************************/
 
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using OpenNI;
-using System.Windows.Media.Media3D;
-using System.Windows.Media;
-using System.Windows;
 
-namespace SimpleRead.net
-{
-	class Program
+    ﻿using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using OpenNI;
+    using System.Windows.Media.Media3D;
+    using System.Windows.Media;
+    using System.Windows;
+
+    public class KinectData
 	{
-		static void Run()
+
+        public System.Windows.Media.Media3D.Point3D xYDepth;
+
+		public KinectData()
 		{
             string SAMPLE_XML_FILE = "C:/Program Files/OpenNI/Samples/SimpleRead.net/SamplesConfig.xml";
              
@@ -138,10 +140,13 @@ namespace SimpleRead.net
 
                         //Console.WriteLine("new U   {0}, {1}, {2} ", (int)u_new.X, (int)u_new.Y, (int)u_new.Z);
                         Console.WriteLine("frameID =  {0} u_real , {1}, {2} and {3} distance {4}", depthMD.FrameID, (int)u_real.X, (int)u_real.Y, (int)u_real.Z, d);
+                        xYDepth = new System.Windows.Media.Media3D.Point3D(u_real.X, u_real.Y, d);
+
                     }
                 }
             }
 		}
+
 
         static private float Distance(Plane3D wall, OpenNI.Point3D newF)
         {
@@ -157,7 +162,6 @@ namespace SimpleRead.net
             
             return d = d_u/d_d;
         }
-
 
         static private OpenNI.Point3D Change(DepthMetaData depthMD, int[,] backgroundDepthMD)
         {
@@ -189,7 +193,6 @@ namespace SimpleRead.net
             return newF;
         }
 
-
         static private void Background(DepthMetaData depthMD, int[,] backgroundDepthMD, int XRes, int YRes, int loadRuns)
         {
             for (int i = 0; XRes > i; i++)
@@ -213,8 +216,6 @@ namespace SimpleRead.net
             }
 
         }
-
-
 
         public static System.Windows.Media.Media3D.Point3D Multiplication(Matrix3D matrix1, System.Windows.Media.Media3D.Point3D point3D)
         {
@@ -289,17 +290,8 @@ namespace SimpleRead.net
             return ans;
         }
 
+       
 
-		static void Main(string[] args)
-		{
-			try
-            {
-                Run();				
-			}
-			catch (System.Exception ex)
-			{
-				Console.WriteLine("Error: {0}", ex.Message);
-			}
-		}
-	}
+        
 }
+
