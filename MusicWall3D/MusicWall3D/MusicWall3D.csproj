@@ -57,7 +57,10 @@
   <ItemGroup>
     <Compile Include="ArrayUtil.cs" />
     <Compile Include="DataManager.cs" />
+    <Compile Include="Glitter.cs" />
     <Compile Include="Loess.cs" />
+    <Compile Include="Particle.cs" />
+    <Compile Include="ParticleSystem.cs" />
     <Compile Include="Point.cs" />
     <Compile Include="Sound.cs" />
     <Compile Include="CubicSpline.cs" />

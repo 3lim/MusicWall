@@ -6,6 +6,7 @@ using SharpDX;
 using TestMySpline;
 using KinectLibrary;
 using System.Diagnostics;
+using ParticleLibrary;
 
 
 namespace MusicWall3D
@@ -52,6 +53,8 @@ namespace MusicWall3D
 
         private Color[] colorList = new Color[] {Color.Green,Color.Goldenrod,Color.Red };
 
+        private ParticleSystem pSystem;// a particle system
+
         private Kinect kinect = new Kinect();
         private const float kinectUpdateFrequency = 0.2f;
         private float lastKinectDataTime = 0.0f;
@@ -76,6 +79,13 @@ namespace MusicWall3D
 
             keyboard = new KeyboardManager(this);
             mouse = new MouseManager(this);
+
+            /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
+            pSystem = new ParticleSystem(graphicsDeviceManager);
+            for (int i = 0; i < 30; i++)
+            {
+                pSystem.addParticle(0, 0);
+            }
 
             objects = new List<List<Vector2>>();
             splines = new List<CubicSpline>();
@@ -150,6 +160,8 @@ namespace MusicWall3D
             position.X = (float)kinect.xYDepth.X * - 1.0f;
             position.Y = (float)kinect.xYDepth.Y;
             position.Z = (float)kinect.xYDepth.Z;
+
+           
 
             if (gameTime.TotalGameTime.TotalSeconds - lastKinectDataTime >= kinectUpdateFrequency)
             {
@@ -227,6 +239,30 @@ namespace MusicWall3D
                 currentSpline = new CubicSpline();
 
             }
+
+            /**PARTICLE UPDATE********************************************************************/
+            List<Particle> remove = new List<Particle>();
+            foreach (Particle p in pSystem.getList())
+            {
+
+                if (p.getLife() > 0)
+                {
+                    p.updatePos();
+                    p.updateLife();
+                }
+                else
+                {
+                    remove.Add(p);
+                }
+            }
+            foreach (Particle p in remove)
+            {
+                pSystem.removeParticle(p);
+                pSystem.addParticle(0, 0);
+            }
+            remove.Clear();
+
+            /**END PARTICLE UPDATE********************************************************************/
         }
 
         //TODO
@@ -265,6 +301,24 @@ namespace MusicWall3D
 
             Matrix viewProjInverse = (basicEffect.Projection * basicEffect.View);
             viewProjInverse.Invert();
+
+            /**PARTICLE DRAW********************************************************************/
+            foreach (Particle p in pSystem.getList())
+            {
+                GeometricPrimitive g = ToDisposeContent(GeometricPrimitive.Sphere.New(GraphicsDevice));//p.getShape();
+
+                basicEffect.World = Matrix.Scaling(0.5f, 0.5f, 0.5f) *
+                    Matrix.RotationX(deg2rad(90.0f)) *
+                    Matrix.RotationY(0) *
+                    Matrix.RotationZ(0) *
+                    Matrix.Translation(new Vector3(p.getX(), p.getY() + (0.05f), 0));
+
+                Color4 color = p.getColor();
+                basicEffect.DiffuseColor = color;
+                g.Draw(basicEffect);
+            }
+
+            /**END PARTICLE DRAW********************************************************************/
 
 
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
