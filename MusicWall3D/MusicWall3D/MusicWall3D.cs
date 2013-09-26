@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SharpDX;
 using TestMySpline;
+using KinectLibrary;
 
 
 namespace MusicWall3D
@@ -50,6 +51,18 @@ namespace MusicWall3D
 
         private Color[] colorList = new Color[] {Color.Green,Color.Goldenrod,Color.Red };
 
+        private Kinect kinect = new Kinect();
+        private const float kinectUpdateFrequency = 0.2f;
+        private float lastKinectDataTime = 0.0f;
+
+        private float leftCalibrationTime = 0.0f;
+        private float rightCalibrationTime = 0.0f;
+
+        private Vector3? leftUp = null;
+        private Vector3? rightDown = null;
+
+        private Vector3 position;
+
         public MusicWall3D()
         {
             graphicsDeviceManager = new GraphicsDeviceManager(this);
@@ -69,6 +82,8 @@ namespace MusicWall3D
             Window.Title = "MusicWall3D";
             Window.IsMouseVisible = true;
             Window.AllowUserResizing = true;
+
+            kinect.Initialize();
 
             base.Initialize();
         }
@@ -101,6 +116,8 @@ namespace MusicWall3D
             basicEffect.FogEnd = 100.0f;
             basicEffect.FogEnabled = true;
 
+            position = new Vector3();
+
             primitive = ToDisposeContent(GeometricPrimitive.Sphere.New(GraphicsDevice));
 
             base.LoadContent();
@@ -119,13 +136,45 @@ namespace MusicWall3D
             keyboardState = keyboard.GetState();
             mouseState = mouse.GetState();
 
+            position.X = (float)kinect.xYDepth.X * - 1.0f;
+            position.Y = (float)kinect.xYDepth.Y;
+            position.Z = (float)kinect.xYDepth.Z;
+
+            if (gameTime.TotalGameTime.TotalSeconds - lastKinectDataTime >= kinectUpdateFrequency)
+            {
+                kinect.getData();
+                lastKinectDataTime = (float)gameTime.TotalGameTime.TotalSeconds;
+                if(leftUp!=null&&rightDown!=null) Console.WriteLine(normalizeVector2(new Vector2((float)kinect.xYDepth.X, (float)kinect.xYDepth.Y)));
+            }
+
+            if (leftCalibrationTime < 5.0f)
+            {
+                leftCalibrationTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+            else if (rightCalibrationTime < 5.0f)
+            {
+                rightCalibrationTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            if (leftCalibrationTime >= 5.0f && leftUp == null)
+            {
+                leftUp = new Vector3((float)kinect.xYDepth.X, (float)kinect.xYDepth.Y, (float)kinect.xYDepth.Z);
+                Console.WriteLine(leftUp);
+            }
+
+            if (rightCalibrationTime >= 5.0f && rightDown == null)
+            {
+                rightDown = new Vector3((float)kinect.xYDepth.X, (float)kinect.xYDepth.Y, (float)kinect.xYDepth.Z);
+                Console.WriteLine(rightDown);
+            }
+
             if (mouseState.Right == ButtonState.Pressed)
             {
                 objects.Clear();
                 splines.Clear();
             }
 
-            if (mouseState.Left == ButtonState.Pressed)
+            if (position.Z < 50)
             {
                 if (gameTime.TotalGameTime.TotalSeconds - lastEvent >= frequency)
                 {
@@ -136,9 +185,11 @@ namespace MusicWall3D
 
                     lastEvent = (float)gameTime.TotalGameTime.TotalSeconds;
 
-                    currentPoints.RemoveAll((Vector2 a) => Math.Abs(mouseState.X - a.X) < minDistance);
-                    
-                    currentPoints.Add(new Vector2(mouseState.X, mouseState.Y));
+                    Vector2 normalizedPos = normalizeVector2((Vector2)position);
+
+                    currentPoints.RemoveAll((Vector2 a) => Math.Abs(normalizedPos.X - a.X) < minDistance);
+
+                    currentPoints.Add(normalizedPos);
 
                     currentPoints.Sort((Comparison<Vector2>)delegate(Vector2 a, Vector2 b) { return a.X.CompareTo(b.X); });
 
@@ -183,6 +234,9 @@ namespace MusicWall3D
 
             Matrix viewProjInverse = (basicEffect.Projection * basicEffect.View);
             viewProjInverse.Invert();
+
+
+            Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
 
                 for (int i = 0; i < splines.Count; i++)
@@ -262,8 +316,8 @@ namespace MusicWall3D
                                 Matrix.RotationX(deg2rad(90.0f)) *
                                 Matrix.RotationY(0) *
                                 Matrix.RotationZ(0) *
-                                Matrix.Translation(screenToWorld(new Vector3(mouseState.X,mouseState.Y,5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
-            basicEffect.DiffuseColor = (Vector4)pickColor(mouseState.Y);
+                                Matrix.Translation(screenToWorld(new Vector3(normalizedPos,5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
+            basicEffect.DiffuseColor = (Vector4)pickColor(normalizedPos.Y);
             primitive.Draw(basicEffect);
 
             GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
@@ -307,6 +361,8 @@ namespace MusicWall3D
             GraphicsDevice.DrawQuad(renderTargetBlur);
             GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
 
+            //Console.WriteLine(kinect.xYDepth);
+
             base.Draw(gameTime);
         }
 
@@ -339,6 +395,12 @@ namespace MusicWall3D
             Vector3 far = screen.Unproject(new Vector3(coord.X * screen.Width, coord.Y * screen.Height, 1.0f), proj, view, world);
             
             return near + (far-near)*0.1f;
+        }
+
+        private Vector2 normalizeVector2(Vector2 vec)
+        {
+            if (leftUp == null || rightDown == null) return vec;
+            return Vector2.UnitX - (vec - (Vector2)leftUp) / ((Vector2)rightDown - (Vector2)leftUp);
         }
     }
 }

@@ -42,6 +42,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\OscFramework_2.0\Executables\Framework\Any CPU\Bespoke.Common.Osc.dll</HintPath>
     </Reference>
+    <Reference Include="KinectLibrary">
+      <HintPath>..\..\KinectLibrary\KinectLibrary\bin\Release\KinectLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -52,6 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArrayUtil.cs" />
+    <Compile Include="DataManager.cs" />
+    <Compile Include="Loess.cs" />
+    <Compile Include="Point.cs" />
     <Compile Include="Sound.cs" />
     <Compile Include="CubicSpline.cs" />
     <Compile Include="MusicWall3D.cs" />

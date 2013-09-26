@@ -34,40 +34,48 @@ namespace KinectLibrary
     {
         public System.Windows.Media.Media3D.Point3D xYDepth;
 
-        public void Run()
-        {
-            string SAMPLE_XML_FILE = "C:/Program Files/OpenNI/Samples/SimpleRead.net/SamplesConfig.xml";
 
-            ScriptNode scriptNode;
-            Context context = Context.CreateFromXmlFile(SAMPLE_XML_FILE, out scriptNode);
-            SceneAnalyzer scene = new SceneAnalyzer(context);
-            OpenNI.Point3D wallNorm;
-            OpenNI.Point3D wallPoint;
-            double angleBetween = 0;
-            double angleBetweenY = 0;
-            int centerpointDepth = 0;
-            int loadRuns = 50;
+        private MapOutputMode mapMode;
+        private DepthMetaData depthMD = new DepthMetaData();
+        private SceneMetaData sceneMeta = new SceneMetaData();
+        private DepthGenerator depth;
+        private ScriptNode scriptNode;
+        private Context context;
+
+        SceneAnalyzer scene;
+        OpenNI.Point3D wallNorm;
+        OpenNI.Point3D wallPoint;
+        double angleBetween = 0;
+        double angleBetweenY = 0;
+        int centerpointDepth = 0;
+        int loadRuns = 50;
+
+        private int xRes = 0;
+        private int yRes = 0;
+
+        private int[,] backgroundDepthMD;
+
+        public void Initialize()
+        {
+            string SAMPLE_XML_FILE = @"C:\Users\blub\Desktop\MusicWall2\KinectLibrary\KinectLibrary\bin\Release\SamplesConfig.xml";
+
+            context = Context.CreateFromXmlFile(SAMPLE_XML_FILE, out scriptNode);
+            scene = new SceneAnalyzer(context);
 
             // DepthGenerator
-            DepthGenerator depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
+            depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
             if (depth == null)
             {
-                Console.WriteLine("Sample must have a depth generator!");
+                //Console.WriteLine("Sample must have a depth generator!");
                 return;
             }
-            MapOutputMode mapMode = depth.MapOutputMode;
-            DepthMetaData depthMD = new DepthMetaData();
-            SceneMetaData sceneMeta = new SceneMetaData();
+            mapMode = depth.MapOutputMode;
+            xRes = (int)mapMode.XRes;
+            yRes = (int)mapMode.YRes;
 
+            backgroundDepthMD = new int[xRes, yRes];
 
-            int xRes = (int)mapMode.XRes;
-            int yRes = (int)mapMode.YRes;
-
-            int[,] backgroundDepthMD = new int[xRes, yRes];
-
-            Console.WriteLine("Press any key to stop...");
-
-            while (!Console.KeyAvailable)
+            while(true)
             {
                 context.WaitOneUpdateAll(depth);
                 depth.GetMetaData(depthMD);
@@ -78,9 +86,9 @@ namespace KinectLibrary
                 {
                     Background(depthMD, backgroundDepthMD, depthMD.FullXRes, depthMD.FullYRes, loadRuns);
 
-                    if (depthMD.FrameID == 1)
-                        Console.WriteLine("loading background data... ", depthMD.FrameID * 10);
-                    Console.Write(" . ", (double)depthMD.FrameID / loadRuns * 100);
+                    //if (depthMD.FrameID == 1)
+                    //    Console.WriteLine("loading background data... ", depthMD.FrameID * 10);
+                    //Console.Write(" . ", (double)depthMD.FrameID / loadRuns * 100);
                     centerpointDepth = centerpointDepth + depthMD[(int)mapMode.XRes / 2, (int)mapMode.YRes / 2];
                     if (depthMD.FrameID == loadRuns)
                         centerpointDepth = centerpointDepth / loadRuns;
@@ -92,15 +100,15 @@ namespace KinectLibrary
 
                     if (scene == null)
                     {
-                        Console.WriteLine("Retry!");
+                        //Console.WriteLine("Retry!");
                     }
                     else
                     {
                         wallNorm = scene.Floor.Normal;
                         wallPoint = scene.Floor.Point;
 
-                        Console.WriteLine("\n Wall Normal : {0}, {1}, {2}", wallNorm.X, wallNorm.Y, wallNorm.Z);
-                        Console.WriteLine(" Wall Point: {0}, {1}, {2}", wallPoint.X, wallPoint.Y, wallPoint.Z);
+                        //Console.WriteLine("\n Wall Normal : {0}, {1}, {2}", wallNorm.X, wallNorm.Y, wallNorm.Z);
+                        //Console.WriteLine(" Wall Point: {0}, {1}, {2}", wallPoint.X, wallPoint.Y, wallPoint.Z);
                         Vector n1 = new Vector(0, 1);
                         Vector n2 = new Vector(wallNorm.Y, wallNorm.Z);
                         Vector n3 = new Vector(wallNorm.X, wallNorm.Z);
@@ -108,13 +116,19 @@ namespace KinectLibrary
                         angleBetween = (double)Vector.AngleBetween(n1, n2); // need to get the angle for the last axis in degrees
                         angleBetweenY = (double)Vector.AngleBetween(n1, n3);
 
-                        Console.WriteLine(" Angle: {0}", angleBetween);
+                        //Console.WriteLine(" Angle: {0}", angleBetween);
                     }
+                    break;
 
                 }
-                if (depthMD.FrameID >= loadRuns + 1)
-                {
+            }
 
+        }
+
+        public void getData()
+        {
+            context.WaitOneUpdateAll(depth);
+            depth.GetMetaData(depthMD);
 
                     System.Windows.Media.Media3D.Point3D u_new, u_real, f, c;
                     c = new System.Windows.Media.Media3D.Point3D(0, 0, centerpointDepth);
@@ -124,7 +138,6 @@ namespace KinectLibrary
 
                     if (newF.X != 0 && newF.Z != 0 && newF.Z != 0)
                     {
-
                         newF = depth.ConvertProjectiveToRealWorld(newF);
 
                         f = new System.Windows.Media.Media3D.Point3D(newF.X, newF.Y, newF.Z);        // the point of intress
@@ -140,11 +153,9 @@ namespace KinectLibrary
 
 
                         //Console.WriteLine("new U   {0}, {1}, {2} ", (int)u_new.X, (int)u_new.Y, (int)u_new.Z);
-                        Console.WriteLine("u_real , {1}, {2} and {3} distance {4}", depthMD.FrameID, (int)u_real.X, (int)u_real.Y, (int)u_real.Z, d);
+                        //Console.WriteLine("u_real , {1}, {2} and {3} distance {4}", depthMD.FrameID, (int)u_real.X, (int)u_real.Y, (int)u_real.Z, d);
                         xYDepth = new System.Windows.Media.Media3D.Point3D(u_real.X, u_real.Y, d);
                     }
-                }
-            }
         }
 
         static public float Distance(Plane3D wall, OpenNI.Point3D newF)
