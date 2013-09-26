@@ -5,6 +5,7 @@ using System.Linq;
 using SharpDX;
 using TestMySpline;
 using KinectLibrary;
+using System.Diagnostics;
 
 
 namespace MusicWall3D
@@ -63,6 +64,10 @@ namespace MusicWall3D
 
         private Vector3 position;
 
+        //TODO
+        private Stopwatch stopWatch;
+        private TimeSpan lastUpdate;
+
         public MusicWall3D()
         {
             graphicsDeviceManager = new GraphicsDeviceManager(this);
@@ -74,6 +79,10 @@ namespace MusicWall3D
 
             objects = new List<List<Vector2>>();
             splines = new List<CubicSpline>();
+            //TODO
+            stopWatch = new Stopwatch();
+            stopWatch.Start();
+            lastUpdate = stopWatch.Elapsed;
 
         }
 
@@ -126,6 +135,8 @@ namespace MusicWall3D
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
+            //TODO
+            PlaySounds();
 
             view = Matrix.LookAtLH(new Vector3(0.0f, 0.0f, -7.0f), new Vector3(0, 0.0f, 0), Vector3.UnitY);
             projection = Matrix.PerspectiveFovLH(0.9f, (float)GraphicsDevice.BackBuffer.Width / GraphicsDevice.BackBuffer.Height, 0.1f, 100.0f);
@@ -215,12 +226,32 @@ namespace MusicWall3D
                 currentPoints = new List<Vector2>();
                 currentSpline = new CubicSpline();
 
-                //TO DO
-                //Remove this code, it's just for testing sound.
-                Sound sound = new Sound();
-                sound.Play(mouseState.Y);
             }
         }
+
+        //TODO
+        private void PlaySounds()
+        {
+            TimeSpan tmp = stopWatch.Elapsed;
+            if (lastUpdate.Seconds != tmp.Seconds)
+            {
+                Sound sound = new Sound();
+                lastUpdate = tmp;
+                float last, first;
+                foreach (List<Vector2> list in objects)
+                {
+                    first = list[0][0] - 0.05f;
+                    last = (list.Last()[0]) + 0.05f;
+                    if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
+                        sound.Play(list[0][1]);
+                    Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
+                    Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
+                    Debug.WriteLine(0.5f);
+
+                }
+            }
+        }
+
 
         protected override void Draw(GameTime gameTime)
         {

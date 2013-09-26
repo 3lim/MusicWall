@@ -32,9 +32,12 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="KinectLibrary">
+      <HintPath>bin\Release\KinectLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="OpenNI.Net, Version=1.5.4.0, Culture=neutral, PublicKeyToken=6b43d0c6cf74ee7f, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Program Files\OpenNI\Bin\OpenNI.Net.dll</HintPath>
+      <HintPath>..\..\Kinect\SimpleRead.net\lib\OpenNI.Net.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
