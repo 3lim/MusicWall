@@ -1,4 +1,0 @@
-c:\users\atie\documents\visual studio 2012\Projects\KinectLibrary\KinectLibrary\bin\Release\KinectLibrary.dll
-c:\users\atie\documents\visual studio 2012\Projects\KinectLibrary\KinectLibrary\bin\Release\KinectLibrary.pdb
-c:\users\atie\documents\visual studio 2012\Projects\KinectLibrary\KinectLibrary\obj\Release\KinectLibrary.dll
-c:\users\atie\documents\visual studio 2012\Projects\KinectLibrary\KinectLibrary\obj\Release\KinectLibrary.pdb
