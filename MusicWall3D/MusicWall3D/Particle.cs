@@ -31,8 +31,8 @@ namespace ParticleLibrary
 		{
             ran = new Random(seed);
             graphicsDeviceManager = gdm;
-			this.xpos = x + ran.NextFloat(-0.2f, 0.2f);
-            this.ypos = y + ran.NextFloat(-0.5f, 0.5f);
+            this.xpos = x + ran.NextFloat(-0.002f, 0.002f);
+            this.ypos = y + ran.NextFloat(-0.05f, 0.05f);
             lifespan = life;            
 		}
 

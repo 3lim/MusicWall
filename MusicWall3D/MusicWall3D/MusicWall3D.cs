@@ -51,7 +51,7 @@ namespace MusicWall3D
         private const float pointFrequency = 0.002f;
         private const float minDistance = 0.002f;
 
-        private Color[] colorList = new Color[] {Color.Blue,Color.Magenta,Color.Turquoise,Color.Black };
+        private Color[] colorList = new Color[] {Color.WhiteSmoke, Color.Purple, Color.Black};
 
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
@@ -246,7 +246,7 @@ namespace MusicWall3D
             }
 
             /**PARTICLE UPDATE********************************************************************/
-            addParticles();
+           // addParticles();
             //pSystem.addParticle(0, 0);
 
             List<Particle> remove = new List<Particle>();
@@ -289,6 +289,18 @@ namespace MusicWall3D
                     {
                         sound.Play(list[0].Y);
                         pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        pSystem.addParticle(list[0].X, list[0].Y);
+                        //Debug.WriteLine("X:" + (list[0].X) + " Y:" + (list[0].Y));
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -336,25 +348,7 @@ namespace MusicWall3D
 
             Matrix viewProjInverse = (basicEffect.Projection * basicEffect.View);
             viewProjInverse.Invert();
-
-            /**PARTICLE DRAW********************************************************************/
-            foreach (Particle p in pSystem.getList())
-            {
-
-                basicEffect.World = Matrix.Scaling(0.3f, 0.1f, 0.3f) *
-                    Matrix.RotationX(deg2rad(90.0f)) *
-                    Matrix.RotationY(0) *
-                    Matrix.RotationZ(0) *
-                    Matrix.Translation(new Vector3(p.getX(), p.getY(), 0));
-
-                Color4 color = p.getColor();
-                basicEffect.DiffuseColor = color;
-                g.Draw(basicEffect);
-            }
-
-            /**END PARTICLE DRAW********************************************************************/
-
-
+            
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
 
@@ -438,6 +432,23 @@ namespace MusicWall3D
                                 Matrix.Translation(screenToWorld(new Vector3(normalizedPos,5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
             basicEffect.DiffuseColor = (Vector4)pickColor(normalizedPos.Y);
             primitive.Draw(basicEffect);
+
+            /**PARTICLE DRAW********************************************************************/
+            foreach (Particle p in pSystem.getList())
+            {
+
+                basicEffect.World = Matrix.Scaling(0.3f, 0.1f, 0.3f) *
+                    Matrix.RotationX(deg2rad(90.0f)) *
+                    Matrix.RotationY(0) *
+                    Matrix.RotationZ(0) *
+                    Matrix.Translation(screenToWorld( new Vector3(p.getX(), p.getY(), 5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
+
+                Color4 color = p.getColor();
+                basicEffect.DiffuseColor = color;
+                g.Draw(basicEffect);
+            }
+
+            /**END PARTICLE DRAW********************************************************************/
 
             GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
             GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
