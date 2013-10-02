@@ -56,6 +56,9 @@ namespace MusicWall3D
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
 
+        private GeometricPrimitive timeLine;
+        private List<GeometricPrimitive> guideLines;
+
         //private Kinect kinect = new Kinect();
         private const float kinectUpdateFrequency = 0.2f;
         private float lastKinectDataTime = 0.0f;
@@ -115,6 +118,13 @@ namespace MusicWall3D
 
             arial16Font = Content.Load<SpriteFont>("Arial16");
             g = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));//p.getShape();
+
+            timeLine = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));
+            guideLines = new List<GeometricPrimitive>();
+            for (int i = 0; i < 9; i++)
+            {
+                guideLines.Add(ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice)));
+            }
 
             // Bloom Effect
             bloomEffect = Content.Load<Effect>("Bloom");
@@ -270,6 +280,10 @@ namespace MusicWall3D
             remove.Clear();
 
             /**END PARTICLE UPDATE********************************************************************/
+
+
+            
+
         }
 
         //TODO
@@ -436,7 +450,6 @@ namespace MusicWall3D
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
-
                 basicEffect.World = Matrix.Scaling(0.3f, 0.1f, 0.3f) *
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
@@ -449,6 +462,41 @@ namespace MusicWall3D
             }
 
             /**END PARTICLE DRAW********************************************************************/
+
+            // ----- TIME LINE --------------------
+            TimeSpan tmp = stopWatch.Elapsed;
+            float xTL = (float)((tmp.Seconds % 10) / (float)(10));
+            basicEffect.World = Matrix.Scaling(0.1f, 0.1f, GraphicsDevice.BackBuffer.Height) *
+                Matrix.RotationX(deg2rad(90.0f)) *
+                Matrix.RotationY(0) *
+                Matrix.RotationZ(0) *
+                Matrix.Translation(screenToWorld(new Vector3(xTL, 0.0f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+
+            basicEffect.DiffuseColor = new Color4(0.2f, 0.9f, 0.2f, 0.2f);
+            timeLine.Draw(basicEffect);
+
+            // ------- END TIME LINE -------------
+
+            // ----- GUIDE LINES ------------------
+            int screenWidth = GraphicsDevice.BackBuffer.Width;
+            float glY = 0.0f;
+            foreach(GeometricPrimitive gl in guideLines)
+            {
+                glY += 0.1f;
+                basicEffect.World = Matrix.Scaling((float)(screenWidth*0.8), 0.1f, 0.05f) *
+                    Matrix.RotationX(deg2rad(90.0f)) *
+                    Matrix.RotationY(0) *
+                    Matrix.RotationZ(0) *
+                    Matrix.Translation(screenToWorld(new Vector3((float)(0.1), glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                
+                basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
+                gl.Draw(basicEffect);
+            }
+
+            // ----- END GUIDE LINES --------------
+
+            
+
 
             GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
             GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
