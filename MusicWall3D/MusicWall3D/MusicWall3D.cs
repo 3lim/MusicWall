@@ -454,7 +454,7 @@ namespace MusicWall3D
 
             // ----- TIME LINE --------------------
             TimeSpan tmp = stopWatch.Elapsed;
-            float xTL = (float)((tmp.Seconds % 10) / (float)(10));
+            float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
             basicEffect.World = Matrix.Scaling(0.1f, 0.1f, GraphicsDevice.BackBuffer.Height) *
                 Matrix.RotationX(deg2rad(90.0f)) *
                 Matrix.RotationY(0) *
@@ -472,11 +472,11 @@ namespace MusicWall3D
             foreach(GeometricPrimitive gl in guideLines)
             {
                 glY += 0.1f;
-                basicEffect.World = Matrix.Scaling((float)(screenWidth*0.8), 0.1f, 0.05f) *
+                basicEffect.World = Matrix.Scaling(screenWidth, 0.1f, 0.05f) *
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3((float)(0.1), glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
                 
                 basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
                 gl.Draw(basicEffect);
