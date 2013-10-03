@@ -47,11 +47,11 @@ namespace MusicWall3D
         private bool drawingStarted = false;
         private float lastEvent = 0.0f;
 
-        private const float frequency = 0.05f;
+        private const float frequency = 0.005f;
         private const float pointFrequency = 0.002f;
-        private const float minDistance = 0.002f;
+        private const float minDistance = 0.005f;
 
-        private Color[] colorList = new Color[] {Color.WhiteSmoke, Color.Purple, Color.Black};
+        private Color[] colorList = new Color[] {Color.WhiteSmoke, Color.Orange, Color.Black};
 
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
@@ -150,7 +150,7 @@ namespace MusicWall3D
 
             position = new Vector3();
 
-            primitive = ToDisposeContent(GeometricPrimitive.Sphere.New(GraphicsDevice));
+            primitive = ToDisposeContent(GeometricPrimitive.Cylinder.New(GraphicsDevice));
 
             base.LoadContent();
         }
@@ -171,6 +171,8 @@ namespace MusicWall3D
             mouseState = mouse.GetState();
 
             position = new Vector3(mouseState.X, mouseState.Y, 0.0f);
+
+            // KINECT
 
             /*position.X = (float)kinect.xYDepth.X * - 1.0f;
             position.Y = (float)kinect.xYDepth.Y;
@@ -206,6 +208,8 @@ namespace MusicWall3D
                 Console.WriteLine(rightDown);
             }*/
 
+            // KINECT END
+
             if (mouseState.Right == ButtonState.Pressed)
             {
                 objects.Clear();
@@ -224,6 +228,15 @@ namespace MusicWall3D
                     lastEvent = (float)gameTime.TotalGameTime.TotalSeconds;
 
                     Vector2 normalizedPos = normalizeVector2((Vector2)position);
+
+                    if (currentPoints.Any((Vector2 a) => Math.Abs(normalizedPos.X - a.X) < minDistance && Math.Abs(normalizedPos.Y - a.Y) > minDistance))
+                    {
+                        objects.Add(currentPoints);
+                        splines.Add(currentSpline);
+
+                        currentPoints = new List<Vector2>();
+                        currentSpline = new CubicSpline();
+                    }
 
                     currentPoints.RemoveAll((Vector2 a) => Math.Abs(normalizedPos.X - a.X) < minDistance);
 
@@ -387,25 +400,13 @@ namespace MusicWall3D
 
                     for (int j = 0; j < xs.Count; j++)
                     {
-                        basicEffect.World = Matrix.Scaling(0.4f, 0.2f, 0.4f) *
-                                    Matrix.RotationX(deg2rad(90.0f)) *
-                                    Matrix.RotationY(0) *
-                                    Matrix.RotationZ(0) *
-                                    Matrix.Translation(screenToWorld(new Vector3(xs[j], ys[j], 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
-                        basicEffect.DiffuseColor = (Vector4)pickColor(ys[j]);
-                        primitive.Draw(basicEffect);
+                        drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
                     }
                 }
 
                 for (int i = 0; i < currentPoints.Count; i++)
                 {
-                    basicEffect.World = Matrix.Scaling(0.4f, 0.2f, 0.4f) *
-                                Matrix.RotationX(deg2rad(90.0f)) *
-                                Matrix.RotationY(0) *
-                                Matrix.RotationZ(0) *
-                                Matrix.Translation(screenToWorld(new Vector3(currentPoints[i], 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
-                    basicEffect.DiffuseColor = (Vector4)pickColor(currentPoints[i].Y);
-                    primitive.Draw(basicEffect);
+                    drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
                 }
 
                 if (currentPoints.Count > 0)
@@ -429,23 +430,11 @@ namespace MusicWall3D
 
                     for (int j = 0; j < xs.Count; j++)
                     {
-                        basicEffect.World = Matrix.Scaling(0.4f, 0.2f, 0.4f) *
-                                    Matrix.RotationX(deg2rad(90.0f)) *
-                                    Matrix.RotationY(0) *
-                                    Matrix.RotationZ(0) *
-                                    Matrix.Translation(screenToWorld(new Vector3(xs[j], ys[j], 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
-                        basicEffect.DiffuseColor = (Vector4)pickColor(ys[j]);
-                        primitive.Draw(basicEffect);
+                        drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
                     }
                 }
 
-                basicEffect.World = Matrix.Scaling(0.4f, 0.2f, 0.4f) *
-                                Matrix.RotationX(deg2rad(90.0f)) *
-                                Matrix.RotationY(0) *
-                                Matrix.RotationZ(0) *
-                                Matrix.Translation(screenToWorld(new Vector3(normalizedPos,5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
-            basicEffect.DiffuseColor = (Vector4)pickColor(normalizedPos.Y);
-            primitive.Draw(basicEffect);
+                drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
 
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
@@ -542,6 +531,17 @@ namespace MusicWall3D
             //Console.WriteLine(kinect.xYDepth);
 
             base.Draw(gameTime);
+        }
+
+        private void drawPoint(Vector3 pos, Vector4 col)
+        {
+            basicEffect.World = Matrix.Scaling(0.4f, 0.05f, 0.4f) *
+                                    Matrix.RotationX(deg2rad(90.0f)) *
+                                    Matrix.RotationY(0) *
+                                    Matrix.RotationZ(0) *
+                                    Matrix.Translation(screenToWorld(pos, basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+            basicEffect.DiffuseColor = col;
+            primitive.Draw(basicEffect);
         }
 
         private float deg2rad(float angle)
