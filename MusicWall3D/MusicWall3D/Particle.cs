@@ -23,6 +23,9 @@ namespace ParticleLibrary
         public int lifespan;
         public int sizeX;
         public int sizeY;
+        public float rotationX;
+        public float rotationY;
+        public float rotationZ;
         public Random ran;
 
         public GraphicsDeviceManager graphicsDeviceManager;
@@ -33,6 +36,9 @@ namespace ParticleLibrary
             graphicsDeviceManager = gdm;
             this.xpos = x + ran.NextFloat(-0.002f, 0.002f);
             this.ypos = y + ran.NextFloat(-0.05f, 0.05f);
+            rotationX = ran.NextFloat(1.0f, 100.0f);
+            rotationY = ran.NextFloat(1.0f, 100.0f);
+            rotationZ = ran.NextFloat(1.0f, 100.0f);
             lifespan = life;            
 		}
 
@@ -105,6 +111,24 @@ namespace ParticleLibrary
 		{
             return this.ypos;
 		}
+
+        public virtual float getRotationX()
+        {
+            rotationX = rotationX + 0.05f;
+            return rotationX;
+        }
+
+        public virtual float getRotationY()
+        {
+            rotationY = rotationY + 0.05f;
+            return rotationY;
+        }
+
+        public virtual float getRotationZ()
+        {
+            rotationZ = rotationZ + 0.05f;
+            return rotationZ;
+        }
 
         public virtual void updateLife()
         {

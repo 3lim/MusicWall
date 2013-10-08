@@ -51,7 +51,7 @@ namespace MusicWall3D
         private const float pointFrequency = 0.002f;
         private const float minDistance = 0.005f;
 
-        private Color[] colorList = new Color[] {Color.WhiteSmoke, Color.Orange, Color.Black};
+        private Color[] colorList = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};
 
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
@@ -439,10 +439,10 @@ namespace MusicWall3D
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
-                basicEffect.World = Matrix.Scaling(0.3f, 0.1f, 0.3f) *
-                    Matrix.RotationX(deg2rad(90.0f)) *
-                    Matrix.RotationY(0) *
-                    Matrix.RotationZ(0) *
+                basicEffect.World = Matrix.Scaling(0.15f, 0.05f, 0.15f) *
+                    Matrix.RotationX(p.getRotationX()) *
+                    Matrix.RotationY(p.getRotationY()) *
+                    Matrix.RotationZ(p.getRotationZ()) *
                     Matrix.Translation(screenToWorld( new Vector3(p.getX(), p.getY(), 5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
 
                 Color4 color = p.getColor();
@@ -461,7 +461,7 @@ namespace MusicWall3D
                 Matrix.RotationZ(0) *
                 Matrix.Translation(screenToWorld(new Vector3(xTL, 0.0f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
 
-            basicEffect.DiffuseColor = new Color4(0.2f, 0.9f, 0.2f, 0.2f);
+            basicEffect.DiffuseColor = new Color4(0.466667f, 0.533333f, 0.6f, 1.0f);//new Color4(0.2f, 0.9f, 0.2f, 0.2f);
             timeLine.Draw(basicEffect);
 
             // ------- END TIME LINE -------------
