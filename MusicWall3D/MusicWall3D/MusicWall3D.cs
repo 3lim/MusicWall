@@ -114,7 +114,7 @@ namespace MusicWall3D
 
         protected override void LoadContent()
         {
-            spriteBatch = ToDisposeContent(new SpriteBatch(GraphicsDevice));
+            spriteBatch = ToDisposeContent(new SpriteBatch(GraphicsDevice));      
 
             arial16Font = Content.Load<SpriteFont>("Arial16");
             g = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));//p.getShape();
@@ -303,30 +303,35 @@ namespace MusicWall3D
         private void PlaySounds()
         {
             TimeSpan tmp = stopWatch.Elapsed;
+
+            foreach (List<Vector2> list in objects)
+            {
+
+                //**********PARTICLE TEST***//
+                foreach (Vector2 l in list)
+                {
+                    float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
+                    if (l.X >= xTL-0.02f && l.X <= xTL+0.02f)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    {
+                        for (int i = 0; i < 1; i++)
+                        {
+                            pSystem.addParticle(l.X, l.Y);
+                        }
+                    }
+                }
+            }
             if (lastUpdate.Seconds != tmp.Seconds)
             {
                 Sound sound = new Sound();
                 lastUpdate = tmp;
                 float last, first;
                 foreach (List<Vector2> list in objects)
-                {
+                {                    
                     first = list[0][0] - 0.05f;
                     last = (list.Last()[0]) + 0.05f;
                     if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
                     {
-                        sound.Play(list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
-                        pSystem.addParticle(list[0].X, list[0].Y);
+                        sound.Play(list[0].Y);                      
                         //Debug.WriteLine("X:" + (list[0].X) + " Y:" + (list[0].Y));
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
@@ -366,10 +371,13 @@ namespace MusicWall3D
         protected override void Draw(GameTime gameTime)
         {
             var time = (float)gameTime.TotalGameTime.TotalSeconds;
+            
 
             // offline rendering
             GraphicsDevice.SetRenderTargets(GraphicsDevice.DepthStencilBuffer, renderTargetOffScreen);
-            GraphicsDevice.Clear(Color.BlanchedAlmond);
+
+            GraphicsDevice.Clear(new Color4(0.316f, 0.451f, 0.473f, 1.0f));//Background color 
+
 
             float aspectRatio = (float)GraphicsDevice.BackBuffer.Width / GraphicsDevice.BackBuffer.Height;
 
@@ -439,7 +447,7 @@ namespace MusicWall3D
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
-                basicEffect.World = Matrix.Scaling(0.15f, 0.05f, 0.15f) *
+                basicEffect.World = Matrix.Scaling(0.1f, 0.1f, 0.1f) *
                     Matrix.RotationX(p.getRotationX()) *
                     Matrix.RotationY(p.getRotationY()) *
                     Matrix.RotationZ(p.getRotationZ()) *
@@ -459,8 +467,7 @@ namespace MusicWall3D
                 Matrix.RotationX(deg2rad(90.0f)) *
                 Matrix.RotationY(0) *
                 Matrix.RotationZ(0) *
-                Matrix.Translation(screenToWorld(new Vector3(xTL, 0.0f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
-
+                Matrix.Translation(screenToWorld(new Vector3(xTL, 0.0f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));            
             basicEffect.DiffuseColor = new Color4(0.466667f, 0.533333f, 0.6f, 1.0f);//new Color4(0.2f, 0.9f, 0.2f, 0.2f);
             timeLine.Draw(basicEffect);
 

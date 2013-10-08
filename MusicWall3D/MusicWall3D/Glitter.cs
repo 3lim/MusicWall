@@ -21,7 +21,7 @@ namespace ParticleLibrary
 
             float f = ran.NextFloat(0.2f, 0.6f);
 
-            color.Red = f;// ran.NextFloat(0.2f, 0.6f);
+            color.Red = ran.NextFloat(0.2f, 0.6f);
             color.Green = f;// ran.NextFloat(0.0f, 0.4f);
             color.Blue = ran.NextFloat(0.4f, 1.0f);
             color.Alpha = 1.0f;        
