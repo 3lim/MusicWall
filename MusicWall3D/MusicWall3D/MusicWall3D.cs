@@ -40,16 +40,17 @@ namespace MusicWall3D
 
         private List<List<Vector2>> objects;
 
-        private List<CubicSpline> splines;
+        private List<Spline> splines;
 
-        private CubicSpline currentSpline = new CubicSpline();
+        private Spline currentSpline;
         private List<Vector2> currentPoints = new List<Vector2>();
         private bool drawingStarted = false;
         private float lastEvent = 0.0f;
 
         private const float frequency = 0.005f;
-        private const float pointFrequency = 0.002f;
-        private const float minDistance = 0.005f;
+        private const float pointFrequency = 0.005f;
+        private const float minDistance = 0.01f;
+        private const float particleFrequency = 0.0005f;
 
         private Color[] colorList = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};
 
@@ -60,7 +61,7 @@ namespace MusicWall3D
         private List<GeometricPrimitive> guideLines;
 
         //private Kinect kinect = new Kinect();
-        private const float kinectUpdateFrequency = 0.2f;
+        private const float kinectUpdateFrequency = 0.5f;
         private float lastKinectDataTime = 0.0f;
 
         private float leftCalibrationTime = 0.0f;
@@ -93,7 +94,7 @@ namespace MusicWall3D
             }*/
 
             objects = new List<List<Vector2>>();
-            splines = new List<CubicSpline>();
+            splines = new List<Spline>();
             //TODO
             stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -214,58 +215,66 @@ namespace MusicWall3D
             {
                 objects.Clear();
                 splines.Clear();
+
+                currentPoints = new List<Vector2>();
             }
 
             if (mouseState.Left == ButtonState.Pressed)//position.Z < 50)
             {
                 if (gameTime.TotalGameTime.TotalSeconds - lastEvent >= frequency)
                 {
-                    if (!drawingStarted)
-                    {
-                        drawingStarted = true;
-                    }
 
                     lastEvent = (float)gameTime.TotalGameTime.TotalSeconds;
 
                     Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
-                    if (currentPoints.Any((Vector2 a) => Math.Abs(normalizedPos.X - a.X) < minDistance && Math.Abs(normalizedPos.Y - a.Y) > minDistance))
+                    if (!drawingStarted)
                     {
-                        objects.Add(currentPoints);
-                        splines.Add(currentSpline);
 
+                        drawingStarted = true;
+                        currentSpline = new Spline(normalizedPos.X, normalizedPos.Y);
                         currentPoints = new List<Vector2>();
-                        currentSpline = new CubicSpline();
+                        currentPoints.Add(new Vector2(normalizedPos.X, normalizedPos.Y));
                     }
 
-                    currentPoints.RemoveAll((Vector2 a) => Math.Abs(normalizedPos.X - a.X) < minDistance);
+                    //if (currentPoints.Any((Vector2 a) => Math.Abs(normalizedPos.X - a.X) < minDistance && Math.Abs(normalizedPos.Y - a.Y) > minDistance))
+                    //{
+                    //    objects.Add(currentPoints);
+                    //    splines.Add(currentSpline);
 
-                    currentPoints.Add(normalizedPos);
+                    //    currentPoints = new List<Vector2>();
+                    //    currentSpline = new CubicSpline();
+                    //}
 
-                    currentPoints.Sort((Comparison<Vector2>)delegate(Vector2 a, Vector2 b) { return a.X.CompareTo(b.X); });
-
-                    float[] xs = new float[currentPoints.Count];
-                    float[] ys = (float[])xs.Clone();
-
-                    for (int i = 0; i < currentPoints.Count; i++)
+                    if (!currentPoints.Any((Vector2 a) => (normalizedPos - a).Length() < minDistance))
                     {
-                        xs[i] = currentPoints[i].X;
-                        ys[i] = currentPoints[i].Y;
+                        currentPoints.Add(normalizedPos);
+                        currentSpline.addPoint(normalizedPos.X, normalizedPos.Y);
+                        currentPoints = currentSpline.sample(pointFrequency);
                     }
 
-                    if(currentPoints.Count > 1) currentSpline.Fit(xs, ys);
+                    //currentPoints.Sort((Comparison<Vector2>)delegate(Vector2 a, Vector2 b) { return a.X.CompareTo(b.X); });
+
+                    //float[] xs = new float[currentPoints.Count];
+                    //float[] ys = (float[])xs.Clone();
+
+                    //for (int i = 0; i < currentPoints.Count; i++)
+                    //{
+                    //    xs[i] = currentPoints[i].X;
+                    //    ys[i] = currentPoints[i].Y;
+                    //}
+
+                    //if(currentPoints.Count > 1) currentSpline.Fit(xs, ys);
                 }
             }
             else if(drawingStarted)
             {
                 drawingStarted = false;
-
-                objects.Add(currentPoints);
-                splines.Add(currentSpline);
-
-                currentPoints = new List<Vector2>();
-                currentSpline = new CubicSpline();
-
+                if (currentSpline != null)
+                {
+                    objects.Add(currentPoints);
+                    splines.Add(currentSpline);
+                }
             }
 
             /**PARTICLE UPDATE********************************************************************/
@@ -311,7 +320,7 @@ namespace MusicWall3D
                 foreach (Vector2 l in list)
                 {
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (l.X >= xTL-0.02f && l.X <= xTL+0.02f)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
                         for (int i = 0; i < 1; i++)
                         {
@@ -326,7 +335,9 @@ namespace MusicWall3D
                 lastUpdate = tmp;
                 float last, first;
                 foreach (List<Vector2> list in objects)
-                {                    
+                {
+                    if (list.Count == 0) continue;
+
                     first = list[0][0] - 0.05f;
                     last = (list.Last()[0]) + 0.05f;
                     if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
@@ -380,36 +391,42 @@ namespace MusicWall3D
 
 
             float aspectRatio = (float)GraphicsDevice.BackBuffer.Width / GraphicsDevice.BackBuffer.Height;
-
-            Matrix viewProjInverse = (basicEffect.Projection * basicEffect.View);
-            viewProjInverse.Invert();
             
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
 
-                for (int i = 0; i < splines.Count; i++)
+
+                for (int i = 0; i < objects.Count; i++)
                 {
-                    List<float> xs = new List<float>();
-                    List<float> ys = new List<float>();
+                    if (objects[i].Count == 0) continue;
 
-                    for (float x = objects[i][0].X; x <= objects[i][objects[i].Count - 1].X; x += pointFrequency)
-                    {
-                        xs.Add(x);
-                    }
 
-                    if (xs.Count > 1)
+                    foreach (Vector2 p in objects[i])
                     {
-                        ys.AddRange(splines[i].Eval(xs.ToArray()));
-                    }
-                    else
-                    {
-                        ys.Add(objects[i][0].Y);
+                        drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
                     }
 
-                    for (int j = 0; j < xs.Count; j++)
-                    {
-                        drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
-                    }
+                    //List<float> xs = new List<float>();
+                    //List<float> ys = new List<float>();
+
+                    //for (float x = objects[i][0].X; x <= objects[i][objects[i].Count - 1].X; x += pointFrequency)
+                    //{
+                    //    xs.Add(x);
+                    //}
+
+                    //if (xs.Count > 1)
+                    //{
+                    //    ys.AddRange(splines[i].Eval(xs.ToArray()));
+                    //}
+                    //else
+                    //{
+                    //    ys.Add(objects[i][0].Y);
+                    //}
+
+                    //for (int j = 0; j < xs.Count; j++)
+                    //{
+                    //    drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
+                    //}
                 }
 
                 for (int i = 0; i < currentPoints.Count; i++)
@@ -417,30 +434,37 @@ namespace MusicWall3D
                     drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
                 }
 
-                if (currentPoints.Count > 0)
-                {
-                    List<float> xs = new List<float>();
-                    List<float> ys = new List<float>();
+                //if (currentPoints.Count > 0)
+                //{
+                //    List<Vector2> points = currentSpline.sample(pointFrequency);
 
-                    for (float x = currentPoints[0].X; x <= currentPoints[currentPoints.Count - 1].X; x += pointFrequency)
-                    {
-                        xs.Add(x);
-                    }
+                //    foreach (Vector2 p in points)
+                //    {
+                //        drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
+                //    }
 
-                    if (xs.Count > 1)
-                    {
-                        ys.AddRange(currentSpline.Eval(xs.ToArray()));
-                    }
-                    else
-                    {
-                        ys.Add(currentPoints[0].Y);
-                    }
+                //    //List<float> xs = new List<float>();
+                //    //List<float> ys = new List<float>();
 
-                    for (int j = 0; j < xs.Count; j++)
-                    {
-                        drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
-                    }
-                }
+                //    //for (float x = currentPoints[0].X; x <= currentPoints[currentPoints.Count - 1].X; x += pointFrequency)
+                //    //{
+                //    //    xs.Add(x);
+                //    //}
+
+                //    //if (xs.Count > 1)
+                //    //{
+                //    //    ys.AddRange(currentSpline.Eval(xs.ToArray()));
+                //    //}
+                //    //else
+                //    //{
+                //    //    ys.Add(currentPoints[0].Y);
+                //    //}
+
+                //    //for (int j = 0; j < xs.Count; j++)
+                //    //{
+                //    //    drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
+                //    //}
+                //}
 
                 drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
 
