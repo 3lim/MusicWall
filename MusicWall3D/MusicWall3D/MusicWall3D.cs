@@ -56,6 +56,7 @@ namespace MusicWall3D
 
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
+        private List<Vector2> remove;
 
         private GeometricPrimitive timeLine;
         private List<GeometricPrimitive> guideLines;
@@ -87,12 +88,7 @@ namespace MusicWall3D
 
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
             pSystem = new ParticleSystem(graphicsDeviceManager);
-
-            /*for (int i = 0; i < 50; i++)
-            {
-                pSystem.addParticle(0, 0);
-            }*/
-
+            remove = new List<Vector2>();
             objects = new List<List<Vector2>>();
             splines = new List<Spline>();
             //TODO
@@ -213,6 +209,7 @@ namespace MusicWall3D
 
             if (mouseState.Right == ButtonState.Pressed)
             {
+                remove.Clear();
                 objects.Clear();
                 splines.Clear();
 
@@ -276,12 +273,13 @@ namespace MusicWall3D
                     splines.Add(currentSpline);
                 }
             }
-
+            if (stopWatch.Elapsed.Seconds % 10 == 0)
+            {
+                remove.Clear();
+            }
             /**PARTICLE UPDATE********************************************************************/
-           // addParticles();
-            //pSystem.addParticle(0, 0);
 
-            List<Particle> remove = new List<Particle>();
+            List<Particle> removeP = new List<Particle>();
             foreach (Particle p in pSystem.getList())
             {
 
@@ -292,14 +290,14 @@ namespace MusicWall3D
                 }
                 else
                 {
-                    remove.Add(p);
+                    removeP.Add(p);
                 }
             }
-            foreach (Particle p in remove)
+            foreach (Particle p in removeP)
             {
                 pSystem.removeParticle(p);                
             }
-            remove.Clear();
+            removeP.Clear();
 
             /**END PARTICLE UPDATE********************************************************************/
 
@@ -320,13 +318,14 @@ namespace MusicWall3D
                 foreach (Vector2 l in list)
                 {
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    if (Math.Abs(l.X - xTL)<= particleFrequency + 0.0005)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
-                        for (int i = 0; i < 1; i++)
+                        for (int i = 0; i < 10; i++)
                         {
-                            pSystem.addParticle(l.X, l.Y);
+                            pSystem.addParticle(l.X, l.Y);                            
                         }
-                    }
+                        remove.Add(l);
+                    }                    
                 }
             }
             if (lastUpdate.Seconds != tmp.Seconds)
@@ -403,7 +402,14 @@ namespace MusicWall3D
 
                     foreach (Vector2 p in objects[i])
                     {
-                        drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
+                        if (remove.Contains(p))
+                        {
+                            //drawPoint(new Vector3(p, 5.0f), new Color4(255, 255, 255, 255));
+                        }
+                        else
+                        {
+                            drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
+                        }
                     }
 
                     //List<float> xs = new List<float>();
@@ -431,7 +437,14 @@ namespace MusicWall3D
 
                 for (int i = 0; i < currentPoints.Count; i++)
                 {
-                    drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
+                    if (remove.Contains(currentPoints[i]))
+                    {
+                        //drawPoint(new Vector3(currentPoints[i], 5.0f), new Color4(255, 255, 255, 255));
+                    }
+                    else
+                    {
+                        drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
+                    }
                 }
 
                 //if (currentPoints.Count > 0)
@@ -466,8 +479,15 @@ namespace MusicWall3D
                 //    //}
                 //}
 
-                drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
-
+                if (remove.Contains(normalizedPos))
+                {
+                   // drawPoint(new Vector3(normalizedPos, 5.0f), new Color4(255, 255, 255, 255));
+                }
+                else
+                {
+                    drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
+                }
+            
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
