@@ -523,11 +523,12 @@ namespace MusicWall3D
             foreach(GeometricPrimitive gl in guideLines)
             {
                 glY += 0.1f;
-                basicEffect.World = Matrix.Scaling(screenWidth, 0.1f, 0.05f) *
+                basicEffect.World = Matrix.Scaling(screenWidth, 0.0f, 0.022f) *
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport)
+                                                    + new Vector3(0, 0, 0.5f));
                 
                 basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
                 gl.Draw(basicEffect);
