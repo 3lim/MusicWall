@@ -56,7 +56,8 @@ namespace MusicWall3D
 
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
-        private List<Vector2> remove;
+
+
 
         private GeometricPrimitive timeLine;
         private List<GeometricPrimitive> guideLines;
@@ -88,7 +89,6 @@ namespace MusicWall3D
 
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
             pSystem = new ParticleSystem(graphicsDeviceManager);
-            remove = new List<Vector2>();
             objects = new List<List<Vector2>>();
             splines = new List<Spline>();
             //TODO
@@ -114,7 +114,7 @@ namespace MusicWall3D
             spriteBatch = ToDisposeContent(new SpriteBatch(GraphicsDevice));      
 
             arial16Font = Content.Load<SpriteFont>("Arial16");
-            g = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));//p.getShape();
+            g = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));
 
             timeLine = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));
             guideLines = new List<GeometricPrimitive>();
@@ -209,7 +209,6 @@ namespace MusicWall3D
 
             if (mouseState.Right == ButtonState.Pressed)
             {
-                remove.Clear();
                 objects.Clear();
                 splines.Clear();
 
@@ -273,10 +272,7 @@ namespace MusicWall3D
                     splines.Add(currentSpline);
                 }
             }
-            if (stopWatch.Elapsed.Seconds % 10 == 0)
-            {
-                remove.Clear();
-            }
+
             /**PARTICLE UPDATE********************************************************************/
 
             List<Particle> removeP = new List<Particle>();
@@ -324,7 +320,6 @@ namespace MusicWall3D
                         {
                             pSystem.addParticle(l.X, l.Y);                            
                         }
-                        remove.Add(l);
                     }                    
                 }
             }
@@ -342,7 +337,6 @@ namespace MusicWall3D
                     if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
                     {
                         sound.Play(list[0].Y);                      
-                        //Debug.WriteLine("X:" + (list[0].X) + " Y:" + (list[0].Y));
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -367,8 +361,6 @@ namespace MusicWall3D
                     {
                         float x = list[0].X;
                         float y = list[0].Y;
-
-                        //pSystem.addParticle(x, y);
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -381,7 +373,8 @@ namespace MusicWall3D
         protected override void Draw(GameTime gameTime)
         {
             var time = (float)gameTime.TotalGameTime.TotalSeconds;
-            
+            TimeSpan tmp = stopWatch.Elapsed;
+            float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
 
             // offline rendering
             GraphicsDevice.SetRenderTargets(GraphicsDevice.DepthStencilBuffer, renderTargetOffScreen);
@@ -393,8 +386,6 @@ namespace MusicWall3D
             
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
-
-
                 for (int i = 0; i < objects.Count; i++)
                 {
                     if (objects[i].Count == 0) continue;
@@ -402,9 +393,9 @@ namespace MusicWall3D
 
                     foreach (Vector2 p in objects[i])
                     {
-                        if (remove.Contains(p))
+                        if (p.X < xTL - particleFrequency)
                         {
-                            //drawPoint(new Vector3(p, 5.0f), new Color4(255, 255, 255, 255));
+                            drawPoint(new Vector3(p, 5.0f), new Color4(255, 255, 255, 255));
                         }
                         else
                         {
@@ -437,14 +428,14 @@ namespace MusicWall3D
 
                 for (int i = 0; i < currentPoints.Count; i++)
                 {
-                    if (remove.Contains(currentPoints[i]))
+                    /*if (currentPoints[i].X < xTL)
                     {
                         //drawPoint(new Vector3(currentPoints[i], 5.0f), new Color4(255, 255, 255, 255));
                     }
                     else
-                    {
+                    {*/
                         drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
-                    }
+                    //}
                 }
 
                 //if (currentPoints.Count > 0)
@@ -479,14 +470,14 @@ namespace MusicWall3D
                 //    //}
                 //}
 
-                if (remove.Contains(normalizedPos))
+                /*if (normalizedPos.X < 1.5)
                 {
                    // drawPoint(new Vector3(normalizedPos, 5.0f), new Color4(255, 255, 255, 255));
                 }
                 else
-                {
+                {*/
                     drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
-                }
+                //}
             
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
@@ -505,8 +496,8 @@ namespace MusicWall3D
             /**END PARTICLE DRAW********************************************************************/
 
             // ----- TIME LINE --------------------
-            TimeSpan tmp = stopWatch.Elapsed;
-            float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
+           /* TimeSpan tmp = stopWatch.Elapsed;
+            float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));*/
             basicEffect.World = Matrix.Scaling(0.1f, 0.1f, GraphicsDevice.BackBuffer.Height) *
                 Matrix.RotationX(deg2rad(90.0f)) *
                 Matrix.RotationY(0) *
