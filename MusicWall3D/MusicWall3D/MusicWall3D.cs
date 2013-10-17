@@ -535,10 +535,17 @@ namespace MusicWall3D
 
             // ----- END GUIDE LINES --------------
 
-            
 
+            // --- Trying to add anti-aliasing
+            RasterizerState rState = GraphicsDevice.RasterizerStates.Default;
+            SharpDX.Direct3D11.RasterizerStateDescription rStateDesc = rState.Description;
+            rStateDesc.IsMultisampleEnabled = true;
+            rStateDesc.IsAntialiasedLineEnabled = true;
+            RasterizerState newRState = RasterizerState.New(GraphicsDevice, rStateDesc);
+            GraphicsDevice.SetRasterizerState(newRState);
+            // --- End anti-aliasing
 
-            GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
+            //GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
             GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
             GraphicsDevice.SetDepthStencilState(GraphicsDevice.DepthStencilStates.None);
 
