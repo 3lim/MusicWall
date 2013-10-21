@@ -74,6 +74,8 @@ namespace MusicWall3D
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
 
+
+
         private GeometricPrimitive timeLine;
         private List<GeometricPrimitive> guideLines;
 
@@ -108,12 +110,6 @@ namespace MusicWall3D
 
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
             pSystem = new ParticleSystem();
-
-            /*for (int i = 0; i < 50; i++)
-            {
-                pSystem.addParticle(0, 0);
-            }*/
-            
             objects = new List<List<Vector2>>();
             splines = new List<Spline>();
             //TODO
@@ -368,10 +364,8 @@ namespace MusicWall3D
             }
 
             /**PARTICLE UPDATE********************************************************************/
-           // addParticles();
-            //pSystem.addParticle(0, 0);
 
-            List<Particle> remove = new List<Particle>();
+            List<Particle> removeP = new List<Particle>();
             foreach (Particle p in pSystem.getList())
             {
 
@@ -382,14 +376,14 @@ namespace MusicWall3D
                 }
                 else
                 {
-                    remove.Add(p);
+                    removeP.Add(p);
                 }
             }
-            foreach (Particle p in remove)
+            foreach (Particle p in removeP)
             {
                 pSystem.removeParticle(p);                
             }
-            remove.Clear();
+            removeP.Clear();
 
             /**END PARTICLE UPDATE********************************************************************/
 
@@ -410,13 +404,13 @@ namespace MusicWall3D
                 foreach (Vector2 l in list)
                 {
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    if (Math.Abs(l.X - xTL)<= particleFrequency + 0.0005)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
-                        for (int i = 0; i < 1; i++)
+                        for (int i = 0; i < 10; i++)
                         {
-                            pSystem.addParticle(l.X, l.Y);
+                            pSystem.addParticle(l.X, l.Y);                            
                         }
-                    }
+                    }                    
                 }
             }
             if (lastUpdate.Seconds != tmp.Seconds)
@@ -433,7 +427,6 @@ namespace MusicWall3D
                     if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
                     {
                         sound.Play(list[0].Y);                      
-                        //Debug.WriteLine("X:" + (list[0].X) + " Y:" + (list[0].Y));
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -458,8 +451,6 @@ namespace MusicWall3D
                     {
                         float x = list[0].X;
                         float y = list[0].Y;
-
-                        //pSystem.addParticle(x, y);
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -472,7 +463,8 @@ namespace MusicWall3D
         protected void Draw(GameTime gameTime)
         {
             var time = (float)gameTime.TotalGameTime.TotalSeconds;
-            
+            TimeSpan tmp = stopWatch.Elapsed;
+            float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
 
             // offline rendering
             graphicsDevice.SetRenderTargets(graphicsDevice.DepthStencilBuffer, graphicsDevice.BackBuffer);
@@ -484,8 +476,6 @@ namespace MusicWall3D
             
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
-
-
                 for (int i = 0; i < objects.Count; i++)
                 {
                     if (objects[i].Count == 0) continue;
@@ -493,7 +483,14 @@ namespace MusicWall3D
 
                     foreach (Vector2 p in objects[i])
                     {
-                        drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
+                        if (p.X < xTL - particleFrequency)
+                        {
+                            drawPoint(new Vector3(p, 5.0f), new Color4(255, 255, 255, 255));
+                        }
+                        else
+                        {
+                            drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
+                        }
                     }
 
                     //List<float> xs = new List<float>();
@@ -521,7 +518,14 @@ namespace MusicWall3D
 
                 for (int i = 0; i < currentPoints.Count; i++)
                 {
-                    drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
+                    /*if (currentPoints[i].X < xTL)
+                    {
+                        //drawPoint(new Vector3(currentPoints[i], 5.0f), new Color4(255, 255, 255, 255));
+                    }
+                    else
+                    {*/
+                        drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
+                    //}
                 }
 
                 //if (currentPoints.Count > 0)
@@ -556,8 +560,15 @@ namespace MusicWall3D
                 //    //}
                 //}
 
-                drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
-
+                /*if (normalizedPos.X < 1.5)
+                {
+                   // drawPoint(new Vector3(normalizedPos, 5.0f), new Color4(255, 255, 255, 255));
+                }
+                else
+                {*/
+                    drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
+                //}
+            
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
@@ -575,8 +586,8 @@ namespace MusicWall3D
             /**END PARTICLE DRAW********************************************************************/
 
             // ----- TIME LINE --------------------
-            TimeSpan tmp = stopWatch.Elapsed;
-            float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
+           /* TimeSpan tmp = stopWatch.Elapsed;
+            float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));*/
             basicEffect.World = Matrix.Scaling(0.1f, 0.1f, graphicsDevice.BackBuffer.Height) *
                 Matrix.RotationX(deg2rad(90.0f)) *
                 Matrix.RotationY(0) *
@@ -593,11 +604,12 @@ namespace MusicWall3D
             foreach(GeometricPrimitive gl in guideLines)
             {
                 glY += 0.1f;
-                basicEffect.World = Matrix.Scaling(screenWidth, 0.1f, 0.05f) *
+                basicEffect.World = Matrix.Scaling(screenWidth, 0.0f, 0.022f) *
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                                                    + new Vector3(0, 0, 0.5f));
                 
                 basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
                 gl.Draw(basicEffect);
@@ -605,8 +617,15 @@ namespace MusicWall3D
 
             // ----- END GUIDE LINES --------------
 
-            
 
+            // --- Trying to add anti-aliasing
+            RasterizerState rState = GraphicsDevice.RasterizerStates.Default;
+            SharpDX.Direct3D11.RasterizerStateDescription rStateDesc = rState.Description;
+            rStateDesc.IsMultisampleEnabled = true;
+            rStateDesc.IsAntialiasedLineEnabled = true;
+            RasterizerState newRState = RasterizerState.New(GraphicsDevice, rStateDesc);
+            GraphicsDevice.SetRasterizerState(newRState);
+            // --- End anti-aliasing
 
             //GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
             //GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
