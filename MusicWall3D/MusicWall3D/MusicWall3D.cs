@@ -2,11 +2,26 @@
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using SharpDX;
 using TestMySpline;
 //using KinectLibrary;
-using System.Diagnostics;
 using ParticleLibrary;
+using MusicWall3D.Properties;
+
+using System.Diagnostics;
+using System.Drawing;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+using SharpDX;
+using SharpDX.D3DCompiler;
+using SharpDX.Direct3D;
+using SharpDX.Direct3D11;
+using SharpDX.DXGI;
+using SharpDX.Windows;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using Color = SharpDX.Color;
+using Device = SharpDX.Direct3D11.Device;
+using MapFlags = SharpDX.Direct3D11.MapFlags;
 
 
 namespace MusicWall3D
@@ -15,11 +30,15 @@ namespace MusicWall3D
     using SharpDX.Toolkit.Graphics;
     using SharpDX.Toolkit.Input;
 
-    public class MusicWall3D : Game
+    public class MusicWall3D : Component
     {
-        private GraphicsDeviceManager graphicsDeviceManager;
-        private SpriteBatch spriteBatch;
-        private SpriteFont arial16Font;
+        public struct mState {
+            public float X;
+            public float Y;
+            public bool left;
+            public bool right;
+            public bool middle;
+        };
 
         private Matrix view;
         private Matrix projection;
@@ -32,11 +51,9 @@ namespace MusicWall3D
         private BasicEffect basicEffect;
         private GeometricPrimitive primitive;
 
-        private KeyboardManager keyboard;
         private KeyboardState keyboardState;
 
-        private MouseManager mouse;
-        private MouseState mouseState;
+        public mState mouseState;
 
         private List<List<Vector2>> objects;
 
@@ -48,8 +65,8 @@ namespace MusicWall3D
         private float lastEvent = 0.0f;
 
         private const float frequency = 0.005f;
-        private const float pointFrequency = 0.005f;
-        private const float minDistance = 0.01f;
+        private const float pointFrequency = 0.004f;
+        private const float minDistance = 0.025f;
         private const float particleFrequency = 0.0005f;
 
         private Color[] colorList = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};
@@ -72,27 +89,31 @@ namespace MusicWall3D
 
         private Vector3 position;
 
+        private const int NumberOfThreads = 16;
+
+        private Device device;
+        private GraphicsDevice graphicsDevice;
+        private SwapChain swapChain;
+        private SharpDX.Direct3D11.Texture2D backBuffer;
+        private RenderTargetView renderView;
+
+        private RenderForm form;
+
         //TODO
         private Stopwatch stopWatch;
         private TimeSpan lastUpdate;
 
         public MusicWall3D()
         {
-            graphicsDeviceManager = new GraphicsDeviceManager(this);
-
-            Content.RootDirectory = "Content";
-
-            keyboard = new KeyboardManager(this);
-            mouse = new MouseManager(this);
 
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
-            pSystem = new ParticleSystem(graphicsDeviceManager);
+            pSystem = new ParticleSystem();
 
             /*for (int i = 0; i < 50; i++)
             {
                 pSystem.addParticle(0, 0);
             }*/
-
+            
             objects = new List<List<Vector2>>();
             splines = new List<Spline>();
             //TODO
@@ -102,74 +123,143 @@ namespace MusicWall3D
 
         }
 
-        protected override void Initialize()
+        public void Run()
         {
-            Window.Title = "ComposIt";
-            Window.IsMouseVisible = true;
-            Window.AllowUserResizing = true;
+            form = new RenderForm("ComposIt");
+            form.ClientSize = new Size(1380, 768);
 
+            form.KeyDown += (target, arg) =>
+            {
+
+            };
+
+            form.MouseMove += (target, arg) =>
+            {
+                mouseState.X = arg.X / (float)form.ClientSize.Width;
+                mouseState.Y = arg.Y / (float)form.ClientSize.Height;
+            };
+
+            form.MouseDown += (target, arg) =>
+            {
+                mouseState.left |= arg.Button == MouseButtons.Left;
+                mouseState.right |= arg.Button == MouseButtons.Right;
+                mouseState.middle |= arg.Button == MouseButtons.Middle;
+            }; 
+            
+            form.MouseUp += (target, arg) =>
+            {
+                mouseState.left ^= arg.Button == MouseButtons.Left;
+                mouseState.right ^= arg.Button == MouseButtons.Right;
+                mouseState.middle ^= arg.Button == MouseButtons.Middle;
+            };
+
+            var desc = new SwapChainDescription()
+            {
+                BufferCount = 2,
+                ModeDescription =
+                    new ModeDescription(form.ClientSize.Width, form.ClientSize.Height,
+                                        new Rational(60, 1), Format.R8G8B8A8_UNorm),
+                IsWindowed = true,
+                OutputHandle = form.Handle,
+                SampleDescription = new SampleDescription(8, 0),
+                SwapEffect = SwapEffect.Discard,
+                Usage = Usage.RenderTargetOutput
+            };
+
+            //Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.None, desc, out device, out swapChain);
+            //int quality = device.CheckMultisampleQualityLevels(Format.R8G8B8A8_UNorm, 8);
+            //Console.WriteLine(quality);
+            //desc.SampleDescription.Quality = quality > 0 ? quality - 1 : 0;
+            //device.Dispose();
+            //swapChain.Dispose();
+
+            //Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.None, desc, out device, out swapChain);
+            //device = ToDispose(device);
+
+            graphicsDevice = ToDispose(GraphicsDevice.New(DriverType.Hardware));
+
+            PresentationParameters pp = new PresentationParameters(desc.ModeDescription.Width,desc.ModeDescription.Height,desc.OutputHandle,desc.ModeDescription.Format);
+            pp.MultiSampleCount = MSAALevel.X8;
+            pp.IsFullScreen = false;
+            
+            graphicsDevice.Presenter = new SwapChainGraphicsPresenter(graphicsDevice,pp);
+
+            //Factory factory = ToDispose(swapChain.GetParent<Factory>());
+            //factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
+
+            //backBuffer = ToDispose(SharpDX.Direct3D11.Texture2D.FromSwapChain<SharpDX.Direct3D11.Texture2D>(swapChain, 0));
+            //renderView = ToDispose(new RenderTargetView(device, backBuffer));
+
+            LoadContent();
+
+            Stopwatch totalTime = new Stopwatch();
+            totalTime.Start();
+            Stopwatch elapsedTime = new Stopwatch();
+            RenderLoop.Run(form, () =>
+            {
+                Update(new GameTime(totalTime.Elapsed, elapsedTime.Elapsed));
+                TimeSpan old = elapsedTime.Elapsed;
+                elapsedTime.Restart();
+                Draw(new GameTime(totalTime.Elapsed, old));
+                graphicsDevice.Present();
+            });
+
+            Dispose();
             //kinect.Initialize();
-
-            base.Initialize();
         }
 
-        protected override void LoadContent()
+        protected void LoadContent()
         {
-            spriteBatch = ToDisposeContent(new SpriteBatch(GraphicsDevice));      
+            //bloomEffect = ToDispose(new Effect(graphicsDevice, ShaderBytecode.Compile(Resources.Bloom, "fx_4_0").Bytecode));
+            g = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));//p.getShape();
 
-            arial16Font = Content.Load<SpriteFont>("Arial16");
-            g = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));//p.getShape();
-
-            timeLine = ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice));
+            timeLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
             guideLines = new List<GeometricPrimitive>();
             for (int i = 0; i < 9; i++)
             {
-                guideLines.Add(ToDisposeContent(GeometricPrimitive.Cube.New(GraphicsDevice)));
+                guideLines.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
             }
 
-            // Bloom Effect
-            bloomEffect = Content.Load<Effect>("Bloom");
+            //// Bloom Effect
+            //    //BackBuffer = ToDisposeContent(RenderTarget2D.New(GraphicsDevice,1280,720,MSAALevel.X8,GraphicsDevice.Presenter.BackBuffer.Description.Format));
+            //// render targets for bloom effect
+            //renderTargetDownScales = new RenderTarget2D[5];
+            //var backDesc = GraphicsDevice.BackBuffer.Description;
+            //renderTargetOffScreen = ToDisposeContent(RenderTarget2D.New(GraphicsDevice, backDesc.Width, backDesc.Height, 1, backDesc.Format));
+            ////renderTargetOffScreen = ToDisposeContent(RenderTarget2D.New(GraphicsDevice, backDesc.Width, backDesc.Height, MSAALevel.X8,backDesc.Format));
+            //for (int i = 0; i < renderTargetDownScales.Length; i++)
+            //{
+            //    renderTargetDownScales[i] = ToDisposeContent(RenderTarget2D.New(GraphicsDevice, backDesc.Width >> i, backDesc.Height >> i, 1, backDesc.Format));
+            //}
+            //renderTargetBlurTemp = ToDisposeContent((RenderTarget2D)renderTargetDownScales[renderTargetDownScales.Length - 1].Clone());
 
-            // render targets for bloom effect
-            renderTargetDownScales = new RenderTarget2D[5];
-            var backDesc = GraphicsDevice.BackBuffer.Description;
-            renderTargetOffScreen = ToDisposeContent(RenderTarget2D.New(GraphicsDevice, backDesc.Width, backDesc.Height, 1, backDesc.Format));
-            for (int i = 0; i < renderTargetDownScales.Length; i++)
-            {
-                renderTargetDownScales[i] = ToDisposeContent(RenderTarget2D.New(GraphicsDevice, backDesc.Width >> i, backDesc.Height >> i, 1, backDesc.Format));
-            }
-            renderTargetBlurTemp = ToDisposeContent((RenderTarget2D)renderTargetDownScales[renderTargetDownScales.Length - 1].Clone());
-
-            basicEffect = ToDisposeContent(new BasicEffect(GraphicsDevice));
+            basicEffect = ToDispose(new BasicEffect(graphicsDevice));
             basicEffect.PreferPerPixelLighting = true;
             basicEffect.EnableDefaultLighting();
 
             basicEffect.FogColor = (Vector3)Color.SeaGreen;
-            basicEffect.FogStart = 0.1f;
+            basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
             basicEffect.FogEnabled = true;
-
             position = new Vector3();
 
-            primitive = ToDisposeContent(GeometricPrimitive.Cylinder.New(GraphicsDevice));
+            primitive = ToDispose(GeometricPrimitive.Cylinder.New(graphicsDevice));
 
-            base.LoadContent();
         }
 
-        protected override void Update(GameTime gameTime)
+        protected void Update(GameTime gameTime)
         {
-            base.Update(gameTime);
             //TODO
             PlaySounds();            
 
             view = Matrix.LookAtLH(new Vector3(0.0f, 0.0f, -7.0f), new Vector3(0, 0.0f, 0), Vector3.UnitY);
-            projection = Matrix.PerspectiveFovLH(0.9f, (float)GraphicsDevice.BackBuffer.Width / GraphicsDevice.BackBuffer.Height, 0.1f, 100.0f);
+            projection = Matrix.PerspectiveFovLH(0.9f, (float)graphicsDevice.BackBuffer.Width / graphicsDevice.BackBuffer.Height, 0.1f, 100.0f);
 
             basicEffect.View = view;
             basicEffect.Projection = projection;
 
-            keyboardState = keyboard.GetState();
-            mouseState = mouse.GetState();
+            //keyboardState = keyboard.GetState();
+            //mouseState = mouse.GetState();
 
             position = new Vector3(mouseState.X, mouseState.Y, 0.0f);
 
@@ -211,7 +301,7 @@ namespace MusicWall3D
 
             // KINECT END
 
-            if (mouseState.Right == ButtonState.Pressed)
+            if (mouseState.right)
             {
                 objects.Clear();
                 splines.Clear();
@@ -219,7 +309,7 @@ namespace MusicWall3D
                 currentPoints = new List<Vector2>();
             }
 
-            if (mouseState.Left == ButtonState.Pressed)//position.Z < 50)
+            if (mouseState.left)//position.Z < 50)
             {
                 if (gameTime.TotalGameTime.TotalSeconds - lastEvent >= frequency)
                 {
@@ -379,18 +469,18 @@ namespace MusicWall3D
         }
 
 
-        protected override void Draw(GameTime gameTime)
+        protected void Draw(GameTime gameTime)
         {
             var time = (float)gameTime.TotalGameTime.TotalSeconds;
             
 
             // offline rendering
-            GraphicsDevice.SetRenderTargets(GraphicsDevice.DepthStencilBuffer, renderTargetOffScreen);
+            graphicsDevice.SetRenderTargets(graphicsDevice.DepthStencilBuffer, graphicsDevice.BackBuffer);
 
-            GraphicsDevice.Clear(new Color4(0.316f, 0.451f, 0.473f, 1.0f));//Background color 
+            graphicsDevice.Clear(new Color4(0.316f, 0.451f, 0.473f, 1.0f));//Background color 
 
 
-            float aspectRatio = (float)GraphicsDevice.BackBuffer.Width / GraphicsDevice.BackBuffer.Height;
+            float aspectRatio = (float)graphicsDevice.BackBuffer.Width / graphicsDevice.BackBuffer.Height;
             
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
@@ -475,7 +565,7 @@ namespace MusicWall3D
                     Matrix.RotationX(p.getRotationX()) *
                     Matrix.RotationY(p.getRotationY()) *
                     Matrix.RotationZ(p.getRotationZ()) *
-                    Matrix.Translation(screenToWorld( new Vector3(p.getX(), p.getY(), 5.0f),basicEffect.View,basicEffect.Projection,Matrix.Identity,GraphicsDevice.Viewport));
+                    Matrix.Translation(screenToWorld(new Vector3(p.getX(), p.getY(), 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
 
                 Color4 color = p.getColor();
                 basicEffect.DiffuseColor = color;
@@ -487,18 +577,18 @@ namespace MusicWall3D
             // ----- TIME LINE --------------------
             TimeSpan tmp = stopWatch.Elapsed;
             float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-            basicEffect.World = Matrix.Scaling(0.1f, 0.1f, GraphicsDevice.BackBuffer.Height) *
+            basicEffect.World = Matrix.Scaling(0.1f, 0.1f, graphicsDevice.BackBuffer.Height) *
                 Matrix.RotationX(deg2rad(90.0f)) *
                 Matrix.RotationY(0) *
                 Matrix.RotationZ(0) *
-                Matrix.Translation(screenToWorld(new Vector3(xTL, 0.0f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));            
+                Matrix.Translation(screenToWorld(new Vector3(xTL, 0.0f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));            
             basicEffect.DiffuseColor = new Color4(0.466667f, 0.533333f, 0.6f, 1.0f);//new Color4(0.2f, 0.9f, 0.2f, 0.2f);
             timeLine.Draw(basicEffect);
 
             // ------- END TIME LINE -------------
 
             // ----- GUIDE LINES ------------------
-            int screenWidth = GraphicsDevice.BackBuffer.Width;
+            int screenWidth = graphicsDevice.BackBuffer.Width;
             float glY = 0.0f;
             foreach(GeometricPrimitive gl in guideLines)
             {
@@ -507,7 +597,7 @@ namespace MusicWall3D
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
                 
                 basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
                 gl.Draw(basicEffect);
@@ -518,50 +608,50 @@ namespace MusicWall3D
             
 
 
-            GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
-            GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
-            GraphicsDevice.SetDepthStencilState(GraphicsDevice.DepthStencilStates.None);
+            //GraphicsDevice.SetRasterizerState(GraphicsDevice.RasterizerStates.Default);
+            //GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
+            //GraphicsDevice.SetDepthStencilState(GraphicsDevice.DepthStencilStates.None);
 
-            const float brightPassThreshold = 0.5f;
-            GraphicsDevice.SetRenderTargets(renderTargetDownScales[0]);
-            bloomEffect.CurrentTechnique = bloomEffect.Techniques["BrightPassTechnique"];
-            bloomEffect.Parameters["Texture"].SetResource(renderTargetOffScreen);
-            bloomEffect.Parameters["PointSampler"].SetResource(GraphicsDevice.SamplerStates.PointClamp);
-            bloomEffect.Parameters["BrightPassThreshold"].SetValue(brightPassThreshold);
-            GraphicsDevice.DrawQuad(bloomEffect.CurrentTechnique.Passes[0]);
+            //const float brightPassThreshold = 0.5f;
+            //GraphicsDevice.SetRenderTargets(renderTargetDownScales[0]);
+            //bloomEffect.CurrentTechnique = bloomEffect.Techniques["BrightPassTechnique"];
+            //bloomEffect.Parameters["Texture"].SetResource(renderTargetOffScreen);
+            //bloomEffect.Parameters["PointSampler"].SetResource(GraphicsDevice.SamplerStates.PointClamp);
+            //bloomEffect.Parameters["BrightPassThreshold"].SetValue(brightPassThreshold);
+            //GraphicsDevice.DrawQuad(bloomEffect.CurrentTechnique.Passes[0]);
 
-            // Down scale passes
-            for (int i = 1; i < renderTargetDownScales.Length; i++)
-            {
-                GraphicsDevice.SetRenderTargets(renderTargetDownScales[i]);
-                GraphicsDevice.DrawQuad(renderTargetDownScales[0]);
-            }
+            //// Down scale passes
+            //for (int i = 1; i < renderTargetDownScales.Length; i++)
+            //{
+            //    GraphicsDevice.SetRenderTargets(renderTargetDownScales[i]);
+            //    GraphicsDevice.DrawQuad(renderTargetDownScales[0]);
+            //}
 
-            // Horizontal blur pass
-            var renderTargetBlur = renderTargetDownScales[renderTargetDownScales.Length - 1];
-            GraphicsDevice.SetRenderTargets(renderTargetBlurTemp);
-            bloomEffect.CurrentTechnique = bloomEffect.Techniques["BlurPassTechnique"];
-            bloomEffect.Parameters["Texture"].SetResource(renderTargetBlur);
-            bloomEffect.Parameters["LinearSampler"].SetResource(GraphicsDevice.SamplerStates.LinearClamp);
-            bloomEffect.Parameters["TextureTexelSize"].SetValue(new Vector2(1.0f / renderTargetBlurTemp.Width, 1.0f / renderTargetBlurTemp.Height));
-            GraphicsDevice.DrawQuad(bloomEffect.CurrentTechnique.Passes[0]);
+            //// Horizontal blur pass
+            //var renderTargetBlur = renderTargetDownScales[renderTargetDownScales.Length - 1];
+            //GraphicsDevice.SetRenderTargets(renderTargetBlurTemp);
+            //bloomEffect.CurrentTechnique = bloomEffect.Techniques["BlurPassTechnique"];
+            //bloomEffect.Parameters["Texture"].SetResource(renderTargetBlur);
+            //bloomEffect.Parameters["LinearSampler"].SetResource(GraphicsDevice.SamplerStates.LinearClamp);
+            //bloomEffect.Parameters["TextureTexelSize"].SetValue(new Vector2(1.0f / renderTargetBlurTemp.Width, 1.0f / renderTargetBlurTemp.Height));
+            //GraphicsDevice.DrawQuad(bloomEffect.CurrentTechnique.Passes[0]);
 
-            // Vertical blur pass
-            GraphicsDevice.SetRenderTargets(renderTargetBlur);
-            bloomEffect.Parameters["Texture"].SetResource(renderTargetBlurTemp);
-            GraphicsDevice.DrawQuad(bloomEffect.CurrentTechnique.Passes[1]);
+            //// Vertical blur pass
+            //GraphicsDevice.SetRenderTargets(renderTargetBlur);
+            //bloomEffect.Parameters["Texture"].SetResource(renderTargetBlurTemp);
+            //GraphicsDevice.DrawQuad(bloomEffect.CurrentTechnique.Passes[1]);
 
             // Render to screen
-            GraphicsDevice.SetRenderTargets(GraphicsDevice.BackBuffer);
-            GraphicsDevice.DrawQuad(renderTargetOffScreen);
+            //GraphicsDevice.SetRenderTargets(GraphicsDevice.BackBuffer);
+            //GraphicsDevice.DrawQuad(renderTargetOffScreen);
 
-            GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Additive);
-            GraphicsDevice.DrawQuad(renderTargetBlur);
-            GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
+            //GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Additive);
+            //GraphicsDevice.DrawQuad(renderTargetBlur);
+
+            //GraphicsDevice.SetBlendState(GraphicsDevice.BlendStates.Default);
 
             //Console.WriteLine(kinect.xYDepth);
 
-            base.Draw(gameTime);
         }
 
         private void drawPoint(Vector3 pos, Vector4 col)
@@ -570,7 +660,7 @@ namespace MusicWall3D
                                     Matrix.RotationX(deg2rad(90.0f)) *
                                     Matrix.RotationY(0) *
                                     Matrix.RotationZ(0) *
-                                    Matrix.Translation(screenToWorld(pos, basicEffect.View, basicEffect.Projection, Matrix.Identity, GraphicsDevice.Viewport));
+                                    Matrix.Translation(screenToWorld(pos, basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
             basicEffect.DiffuseColor = col;
             primitive.Draw(basicEffect);
         }

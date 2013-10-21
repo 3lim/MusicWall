@@ -10,7 +10,7 @@ using SharpDX.Toolkit.Graphics;
 namespace ParticleLibrary
 {
 
-	public class Particle : Game
+	public class Particle
 	{
 
         public Vector2 acceleration;
@@ -28,12 +28,9 @@ namespace ParticleLibrary
         public float rotationZ;
         public Random ran;
 
-        public GraphicsDeviceManager graphicsDeviceManager;
-
-		public Particle (float x, float y, int life, GraphicsDeviceManager gdm, int seed)
+		public Particle (float x, float y, int life, int seed)
 		{
             ran = new Random(seed);
-            graphicsDeviceManager = gdm;
             this.xpos = x + ran.NextFloat(-0.002f, 0.002f);
             this.ypos = y + ran.NextFloat(-0.05f, 0.05f);
             rotationX = ran.NextFloat(1.0f, 100.0f);
@@ -63,7 +60,6 @@ namespace ParticleLibrary
             color.Alpha = 1;
 
             return color;
-
         }
 
         public virtual void setShape()

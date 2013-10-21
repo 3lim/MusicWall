@@ -12,7 +12,7 @@ namespace ParticleLibrary
 {
 	public class Glitter: Particle
 	{   
-        public Glitter(float x, float y, int life, GraphicsDeviceManager gdm, int seed): base(x, y, life, gdm, seed)
+        public Glitter(float x, float y, int life, int seed): base(x, y, life, seed)
 		{
             velocity.X = ran.NextFloat(-0.002f, 0.002f);
             velocity.Y = -0.003f;            			

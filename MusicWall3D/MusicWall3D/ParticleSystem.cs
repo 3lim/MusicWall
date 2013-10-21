@@ -13,21 +13,18 @@ namespace ParticleLibrary
     class ParticleSystem
     {
         public List<Particle> pSystem = new List<Particle>();
-        private GraphicsDeviceManager graphicsDeviceManager;
         private Random ran = new Random();
         
 
-        public ParticleSystem(GraphicsDeviceManager gdm)
+        public ParticleSystem()
         {
-
-            graphicsDeviceManager = gdm;
 
         }
 
         public void addParticle(float x, float y)//, ParticleType p, int life)
         {
             int i = ran.Next(1, 100);
-            pSystem.Add(new Glitter(x, y, 200, graphicsDeviceManager, i));
+            pSystem.Add(new Glitter(x, y, 200, i));
         }
 
         public List<Particle> getList()

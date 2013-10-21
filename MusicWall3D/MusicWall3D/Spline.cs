@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Drawing;
+using Point = System.Windows.Point;
 
 namespace MusicWall3D
 {
