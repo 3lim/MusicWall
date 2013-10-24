@@ -14,12 +14,12 @@ namespace ParticleLibrary
 	{   
         public Glitter(float x, float y, int life, int seed): base(x, y, life, seed)
 		{
-            velocity.X = ran.NextFloat(-0.002f, 0.002f);
-            velocity.Y = -0.003f;            			
-			acceleration.X = -0.0001f;
-			acceleration.Y = 0.0002f;
+            velocity.X = ran.NextFloat(-0.0002f, 0.0002f);
+            velocity.Y = -0.0003f;            			
+			acceleration.X = -0.000005f;
+			acceleration.Y = 0.00001f;
 
-            float f = ran.NextFloat(0.2f, 0.6f);
+            float f = ran.NextFloat(0.0f, 0.3f);
 
             color.Red = ran.NextFloat(0.2f, 0.6f);
             color.Green = f;// ran.NextFloat(0.0f, 0.4f);

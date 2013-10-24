@@ -56,6 +56,7 @@ namespace MusicWall3D
         public mState mouseState;
 
         private List<List<Vector2>> objects;
+        private List<int> objectColor;
 
         private List<Spline> splines;
 
@@ -73,7 +74,17 @@ namespace MusicWall3D
 
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
+        private GeometricPrimitive paletteCube;
 
+        private Color[] white = new Color[] { Color.White, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
+        private Color[] blue = new Color[] {Color.LightSkyBlue, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
+        private Color[] pink = new Color[] {Color.LightPink, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
+        private Color[] lilac = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
+        private Color[][] palette = new Color[4][];
+
+        private Color4[] palette2 = new Color4[4];
+
+        private int paletteColor = 3; //which color to draw with
 
 
         private GeometricPrimitive timeLine;
@@ -111,6 +122,7 @@ namespace MusicWall3D
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
             pSystem = new ParticleSystem();
             objects = new List<List<Vector2>>();
+            objectColor = new List<int>();
             splines = new List<Spline>();
             //TODO
             stopWatch = new Stopwatch();
@@ -208,6 +220,7 @@ namespace MusicWall3D
         {
             //bloomEffect = ToDispose(new Effect(graphicsDevice, ShaderBytecode.Compile(Resources.Bloom, "fx_4_0").Bytecode));
             g = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));//p.getShape();
+            paletteCube = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
 
             timeLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
             guideLines = new List<GeometricPrimitive>();
@@ -215,6 +228,17 @@ namespace MusicWall3D
             {
                 guideLines.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
             }
+
+            //Palette colours
+            palette[0] = white;
+            palette[1] = blue;
+            palette[2] = pink;
+            palette[3] = lilac;
+
+            palette2[0] = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+            palette2[1] = new Color4(0.165f, 0.875f, 0.902f, 1.0f); 
+            palette2[2] = new Color4(0.914f, 0.392f, 0.475f, 1.0f); 
+            palette2[3] = new Color4(0.49f, 0.392f, 0.851f, 1.0f);
 
             //// Bloom Effect
             //    //BackBuffer = ToDisposeContent(RenderTarget2D.New(GraphicsDevice,1280,720,MSAALevel.X8,GraphicsDevice.Presenter.BackBuffer.Description.Format));
@@ -233,10 +257,10 @@ namespace MusicWall3D
             basicEffect.PreferPerPixelLighting = true;
             basicEffect.EnableDefaultLighting();
 
-            basicEffect.FogColor = (Vector3)Color.SeaGreen;
+            basicEffect.FogColor = (Vector3)Color.White;
             basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
-            basicEffect.FogEnabled = true;
+            basicEffect.FogEnabled = false;
             position = new Vector3();
 
             primitive = ToDispose(GeometricPrimitive.Cylinder.New(graphicsDevice));
@@ -299,12 +323,36 @@ namespace MusicWall3D
 
             if (mouseState.right)
             {
+
                 objects.Clear();
                 splines.Clear();
+                objectColor.Clear();
+                //currentColor.Clear();
 
                 currentPoints = new List<Vector2>();
             }
+           
+            if (mouseState.X >= 0.7 && mouseState.X <= 0.73 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            {
+                paletteColor = 0;
+            }
 
+            else if (mouseState.X >= 0.78 && mouseState.X <= 0.81 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            {
+                paletteColor = 1;
+            }
+
+            else if (mouseState.X >= 0.86 && mouseState.X <= 0.89 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            {
+                paletteColor = 2;
+            }
+
+            else if (mouseState.X >= 0.94 && mouseState.X <= 0.97 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            {
+                paletteColor = 3;
+            }
+            
+            
             if (mouseState.left)//position.Z < 50)
             {
                 if (gameTime.TotalGameTime.TotalSeconds - lastEvent >= frequency)
@@ -321,6 +369,7 @@ namespace MusicWall3D
                         currentSpline = new Spline(normalizedPos.X, normalizedPos.Y);
                         currentPoints = new List<Vector2>();
                         currentPoints.Add(new Vector2(normalizedPos.X, normalizedPos.Y));
+
                     }
 
                     //if (currentPoints.Any((Vector2 a) => Math.Abs(normalizedPos.X - a.X) < minDistance && Math.Abs(normalizedPos.Y - a.Y) > minDistance))
@@ -332,12 +381,14 @@ namespace MusicWall3D
                     //    currentSpline = new CubicSpline();
                     //}
 
+
                     if (!currentPoints.Any((Vector2 a) => (normalizedPos - a).Length() < minDistance))
                     {
                         currentPoints.Add(normalizedPos);
                         currentSpline.addPoint(normalizedPos.X, normalizedPos.Y);
                         currentPoints = currentSpline.sample(pointFrequency);
                     }
+
 
                     //currentPoints.Sort((Comparison<Vector2>)delegate(Vector2 a, Vector2 b) { return a.X.CompareTo(b.X); });
 
@@ -353,14 +404,17 @@ namespace MusicWall3D
                     //if(currentPoints.Count > 1) currentSpline.Fit(xs, ys);
                 }
             }
-            else if(drawingStarted)
+            else if (drawingStarted)
             {
                 drawingStarted = false;
+
                 if (currentSpline != null)
                 {
                     objects.Add(currentPoints);
+                    objectColor.Add(paletteColor);
                     splines.Add(currentSpline);
                 }
+     
             }
 
             /**PARTICLE UPDATE********************************************************************/
@@ -396,7 +450,6 @@ namespace MusicWall3D
         private void PlaySounds()
         {
             TimeSpan tmp = stopWatch.Elapsed;
-
             foreach (List<Vector2> list in objects)
             {
 
@@ -404,20 +457,22 @@ namespace MusicWall3D
                 foreach (Vector2 l in list)
                 {
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL)<= particleFrequency + 0.0005)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    if (Math.Abs(l.X - xTL) <= particleFrequency + 0.0005)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
-                        for (int i = 0; i < 10; i++)
+                        for (int j = 0; j < 1; j++)
                         {
-                            pSystem.addParticle(l.X, l.Y);                            
+                            pSystem.addParticle(l.X, l.Y);
                         }
-                    }                    
+                    }
                 }
             }
+ 
             if (lastUpdate.Seconds != tmp.Seconds)
             {
                 Sound sound = new Sound();
                 lastUpdate = tmp;
                 float last, first;
+
                 foreach (List<Vector2> list in objects)
                 {
                     if (list.Count == 0) continue;
@@ -443,6 +498,7 @@ namespace MusicWall3D
             {                
                 lastUpdate = tmp;
                 float last, first;
+
                 foreach (List<Vector2> list in objects)
                 {
                     first = list[0][0] - 0.05f;
@@ -455,7 +511,7 @@ namespace MusicWall3D
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
                     //Debug.WriteLine(0.5f);
-                }
+                }              
             }
         }
 
@@ -476,98 +532,89 @@ namespace MusicWall3D
             
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
-                for (int i = 0; i < objects.Count; i++)
-                {
-                    if (objects[i].Count == 0) continue;
-
-
-                    foreach (Vector2 p in objects[i])
+                    for (int j = 0; j < objects.Count; j++)
                     {
-                        if (p.X < xTL - particleFrequency)
+                        if (objects[j].Count == 0) continue;
+
+
+                        foreach (Vector2 p in objects[j])
                         {
-                            drawPoint(new Vector3(p, 5.0f), new Color4(255, 255, 255, 255));
+                            if (p.X < xTL - particleFrequency)
+                            {
+                                drawPoint(new Vector3(p, 5.0f), new Color4(255, 255, 255, 255));
+                            }
+                            else
+                            {
+                                drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y, objectColor[j]));
+                            }
                         }
-                        else
-                        {
-                            drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
-                        }
+
+
+                        //List<float> xs = new List<float>();
+                        //List<float> ys = new List<float>();
+
+                        //for (float x = objects[i][0].X; x <= objects[i][objects[i].Count - 1].X; x += pointFrequency)
+                        //{
+                        //    xs.Add(x);
+                        //}
+
+                        //if (xs.Count > 1)
+                        //{
+                        //    ys.AddRange(splines[i].Eval(xs.ToArray()));
+                        //}
+                        //else
+                        //{
+                        //    ys.Add(objects[i][0].Y);
+                        //}
+
+                        //for (int j = 0; j < xs.Count; j++)
+                        //{
+                        //    drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
+                        //}
                     }
 
-                    //List<float> xs = new List<float>();
-                    //List<float> ys = new List<float>();
-
-                    //for (float x = objects[i][0].X; x <= objects[i][objects[i].Count - 1].X; x += pointFrequency)
-                    //{
-                    //    xs.Add(x);
-                    //}
-
-                    //if (xs.Count > 1)
-                    //{
-                    //    ys.AddRange(splines[i].Eval(xs.ToArray()));
-                    //}
-                    //else
-                    //{
-                    //    ys.Add(objects[i][0].Y);
-                    //}
-
-                    //for (int j = 0; j < xs.Count; j++)
-                    //{
-                    //    drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
-                    //}
-                }
-
-                for (int i = 0; i < currentPoints.Count; i++)
-                {
-                    /*if (currentPoints[i].X < xTL)
+                    for (int l = 0; l < currentPoints.Count; l++)
                     {
-                        //drawPoint(new Vector3(currentPoints[i], 5.0f), new Color4(255, 255, 255, 255));
+
+                        drawPoint(new Vector3(currentPoints[l], 5.0f), (Vector4)pickColor(currentPoints[l].Y, paletteColor));
+
                     }
-                    else
-                    {*/
-                        drawPoint(new Vector3(currentPoints[i], 5.0f), (Vector4)pickColor(currentPoints[i].Y));
+
+                    //if (currentPoints.Count > 0)
+                    //{
+                    //    List<Vector2> points = currentSpline.sample(pointFrequency);
+
+                    //    foreach (Vector2 p in points)
+                    //    {
+                    //        drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
+                    //    }
+
+                    //    //List<float> xs = new List<float>();
+                    //    //List<float> ys = new List<float>();
+
+                    //    //for (float x = currentPoints[0].X; x <= currentPoints[currentPoints.Count - 1].X; x += pointFrequency)
+                    //    //{
+                    //    //    xs.Add(x);
+                    //    //}
+
+                    //    //if (xs.Count > 1)
+                    //    //{
+                    //    //    ys.AddRange(currentSpline.Eval(xs.ToArray()));
+                    //    //}
+                    //    //else
+                    //    //{
+                    //    //    ys.Add(currentPoints[0].Y);
+                    //    //}
+
+                    //    //for (int j = 0; j < xs.Count; j++)
+                    //    //{
+                    //    //    drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
+                    //    //}
                     //}
-                }
 
-                //if (currentPoints.Count > 0)
-                //{
-                //    List<Vector2> points = currentSpline.sample(pointFrequency);
 
-                //    foreach (Vector2 p in points)
-                //    {
-                //        drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y));
-                //    }
+                    drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y, paletteColor));
 
-                //    //List<float> xs = new List<float>();
-                //    //List<float> ys = new List<float>();
-
-                //    //for (float x = currentPoints[0].X; x <= currentPoints[currentPoints.Count - 1].X; x += pointFrequency)
-                //    //{
-                //    //    xs.Add(x);
-                //    //}
-
-                //    //if (xs.Count > 1)
-                //    //{
-                //    //    ys.AddRange(currentSpline.Eval(xs.ToArray()));
-                //    //}
-                //    //else
-                //    //{
-                //    //    ys.Add(currentPoints[0].Y);
-                //    //}
-
-                //    //for (int j = 0; j < xs.Count; j++)
-                //    //{
-                //    //    drawPoint(new Vector3(xs[j], ys[j], 5.0f), (Vector4)pickColor(ys[j]));
-                //    //}
-                //}
-
-                /*if (normalizedPos.X < 1.5)
-                {
-                   // drawPoint(new Vector3(normalizedPos, 5.0f), new Color4(255, 255, 255, 255));
-                }
-                else
-                {*/
-                    drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
-                //}
             
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
@@ -578,8 +625,8 @@ namespace MusicWall3D
                     Matrix.RotationZ(p.getRotationZ()) *
                     Matrix.Translation(screenToWorld(new Vector3(p.getX(), p.getY(), 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
 
-                Color4 color = p.getColor();
-                basicEffect.DiffuseColor = color;
+               // Color4 color = p.getColor();
+                basicEffect.DiffuseColor = p.getColor(); //color;
                 g.Draw(basicEffect);
             }
 
@@ -614,8 +661,25 @@ namespace MusicWall3D
                 basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
                 gl.Draw(basicEffect);
             }
-
             // ----- END GUIDE LINES --------------
+           
+            float xPs = 0.7f;
+
+            foreach (Color4 pColor in palette2)
+            {               
+                basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
+                    Matrix.RotationX(deg2rad(90.0f)) *
+                    Matrix.RotationY(0) *
+                    Matrix.RotationZ(0) *
+                    Matrix.Translation(screenToWorld(new Vector3(xPs, 0.93f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.2f));
+
+                basicEffect.DiffuseColor = pColor;
+                paletteCube.Draw(basicEffect);
+                xPs = xPs + 0.08f;
+            }
+
+            
+
 
 
             // --- Trying to add anti-aliasing
@@ -689,8 +753,9 @@ namespace MusicWall3D
             return angle / 180.0f * (float)Math.PI;
         }
 
-        private Color pickColor(float ratio)
+        private Color pickColor(float ratio, int color)
         {
+            colorList = palette[color];
             if (colorList == null) return Color.Black;
 
             if (float.IsNaN(ratio)) return colorList[0];
