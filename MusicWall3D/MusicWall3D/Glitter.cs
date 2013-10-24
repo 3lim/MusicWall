@@ -12,19 +12,16 @@ namespace ParticleLibrary
 {
 	public class Glitter: Particle
 	{   
-        public Glitter(float x, float y, int life, int seed): base(x, y, life, seed)
+        public Glitter(float x, float y, int life, int seed, int type): base(x, y, life, seed)
 		{
             velocity.X = ran.NextFloat(-0.0002f, 0.0002f);
             velocity.Y = -0.0003f;            			
 			acceleration.X = -0.000005f;
 			acceleration.Y = 0.00001f;
+            setColor(type);
 
             float f = ran.NextFloat(0.0f, 0.3f);
-
-            color.Red = ran.NextFloat(0.2f, 0.6f);
-            color.Green = f;// ran.NextFloat(0.0f, 0.4f);
-            color.Blue = ran.NextFloat(0.4f, 1.0f);
-            color.Alpha = 1.0f;        
+      
     
 		}
 
@@ -37,7 +34,48 @@ namespace ParticleLibrary
 
             return color;
 
-        } 
+        }
+        public void setColor(int c)
+        {
+            if (c == 0)
+            {
+                color.Red = 1.0f;// ran.NextFloat(0.2f, 0.6f);
+                color.Green = 1.0f;//f;// ran.NextFloat(0.0f, 0.4f);
+                color.Blue = 1.0f;//ran.NextFloat(0.4f, 1.0f);
+                color.Alpha = 1.0f;
+
+            }
+            else if (c == 1)
+            {
+                color.Red = 0.0f;// ran.NextFloat(0.2f, 0.6f);
+                color.Green = 0.0f;// f;// ran.NextFloat(0.0f, 0.4f);
+                color.Blue = ran.NextFloat(0.4f, 1.0f);
+                color.Alpha = 1.0f;
+            }
+            else if (c == 2)
+            {
+                color.Red = ran.NextFloat(0.2f, 0.6f);
+                color.Green = 0.0f;//f;// ran.NextFloat(0.0f, 0.4f);
+                color.Blue = 0.0f;// ran.NextFloat(0.4f, 1.0f);
+                color.Alpha = 1.0f;
+            }
+            else if (c == 3)
+            {
+                color.Red = ran.NextFloat(0.2f, 0.6f);
+                color.Green = 0.0f;//f;// ran.NextFloat(0.0f, 0.4f);
+                color.Blue = ran.NextFloat(0.4f, 1.0f);
+                color.Alpha = 1.0f;
+            }
+
+            else
+            {
+                float f = ran.NextFloat(0.0f, 0.3f);
+                color.Red = ran.NextFloat(0.2f, 0.6f);
+                color.Green = f;// ran.NextFloat(0.0f, 0.4f);
+                color.Blue = ran.NextFloat(0.4f, 1.0f);
+                color.Alpha = 1.0f;
+            }
+        }
 
         public Vector2 getAcceleration()
         {

@@ -450,18 +450,18 @@ namespace MusicWall3D
         private void PlaySounds()
         {
             TimeSpan tmp = stopWatch.Elapsed;
-            foreach (List<Vector2> list in objects)
+            for(int pc = 0; pc < objects.Count(); pc++)//foreach (List<Vector2> list in objects)
             {
 
                 //**********PARTICLE TEST***//
-                foreach (Vector2 l in list)
+                foreach (Vector2 l in objects[pc])
                 {
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
                     if (Math.Abs(l.X - xTL) <= particleFrequency + 0.0005)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
                         for (int j = 0; j < 1; j++)
                         {
-                            pSystem.addParticle(l.X, l.Y);
+                            pSystem.addParticle(l.X, l.Y, objectColor[pc]);
                         }
                     }
                 }
