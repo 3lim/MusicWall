@@ -76,10 +76,10 @@ namespace MusicWall3D
         private GeometricPrimitive g;
         private GeometricPrimitive paletteCube;
 
-        private Color[] white = new Color[] { Color.White, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
-        private Color[] blue = new Color[] {Color.LightSkyBlue, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
-        private Color[] pink = new Color[] {Color.LightPink, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
-        private Color[] lilac = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
+        private Color[] white = new Color[] { Color.Navy};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
+        private Color[] blue = new Color[] {Color.ForestGreen};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
+        private Color[] pink = new Color[] {Color.DeepPink};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
+        private Color[] lilac = new Color[] {Color.Purple};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
         private Color[][] palette = new Color[4][];
 
         private Color4[] palette2 = new Color4[4];
@@ -235,10 +235,10 @@ namespace MusicWall3D
             palette[2] = pink;
             palette[3] = lilac;
 
-            palette2[0] = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-            palette2[1] = new Color4(0.165f, 0.875f, 0.902f, 1.0f); 
-            palette2[2] = new Color4(0.914f, 0.392f, 0.475f, 1.0f); 
-            palette2[3] = new Color4(0.49f, 0.392f, 0.851f, 1.0f);
+            palette2[0] = new Color4(0.0f, 0.0f, 1.0f, 1.0f);
+            palette2[1] = new Color4(0.165f, 1.0f, 0.502f, 1.0f); 
+            palette2[2] = new Color4(0.814f, 0.0f, 0.475f, 1.0f); 
+            palette2[3] = new Color4(0.49f, 0.0f, 0.851f, 1.0f);
 
             //// Bloom Effect
             //    //BackBuffer = ToDisposeContent(RenderTarget2D.New(GraphicsDevice,1280,720,MSAALevel.X8,GraphicsDevice.Presenter.BackBuffer.Description.Format));
@@ -257,7 +257,7 @@ namespace MusicWall3D
             basicEffect.PreferPerPixelLighting = true;
             basicEffect.EnableDefaultLighting();
 
-            basicEffect.FogColor = (Vector3)Color.White;
+            basicEffect.FogColor = (Vector3)Color.FloralWhite;
             basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
             basicEffect.FogEnabled = false;
@@ -353,7 +353,7 @@ namespace MusicWall3D
             }
             
             
-            if (mouseState.left)//position.Z < 50)
+            else if (mouseState.left)//position.Z < 50)
             {
                 if (gameTime.TotalGameTime.TotalSeconds - lastEvent >= frequency)
                 {
