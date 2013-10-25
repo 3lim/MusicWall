@@ -76,10 +76,10 @@ namespace MusicWall3D
         private GeometricPrimitive g;
         private GeometricPrimitive paletteCube;
 
-        private Color[] white = new Color[] { Color.Navy};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
-        private Color[] blue = new Color[] {Color.ForestGreen};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
+        private Color[] white = new Color[] { Color.DarkSeaGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
+        private Color[] blue = new Color[] {Color.DarkBlue};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
         private Color[] pink = new Color[] {Color.DeepPink};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
-        private Color[] lilac = new Color[] {Color.Purple};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
+        private Color[] lilac = new Color[] {Color.DarkOrchid};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
         private Color[][] palette = new Color[4][];
 
         private Color4[] palette2 = new Color4[4];
@@ -235,10 +235,11 @@ namespace MusicWall3D
             palette[2] = pink;
             palette[3] = lilac;
 
-            palette2[0] = new Color4(0.0f, 0.0f, 1.0f, 1.0f);
-            palette2[1] = new Color4(0.165f, 1.0f, 0.502f, 1.0f); 
-            palette2[2] = new Color4(0.814f, 0.0f, 0.475f, 1.0f); 
-            palette2[3] = new Color4(0.49f, 0.0f, 0.851f, 1.0f);
+            palette2[0] = new Color4(0.165f, 1.0f, 0.502f, 1.0f);
+            palette2[1] = new Color4(0.814f, 0.0f, 0.475f, 1.0f);
+            palette2[2] = new Color4(0.49f, 0.0f, 0.851f, 1.0f);
+            palette2[3] = new Color4(0.0f, 0.0f, 1.0f, 1.0f);
+
 
             //// Bloom Effect
             //    //BackBuffer = ToDisposeContent(RenderTarget2D.New(GraphicsDevice,1280,720,MSAALevel.X8,GraphicsDevice.Presenter.BackBuffer.Description.Format));
@@ -257,10 +258,10 @@ namespace MusicWall3D
             basicEffect.PreferPerPixelLighting = true;
             basicEffect.EnableDefaultLighting();
 
-            basicEffect.FogColor = (Vector3)Color.FloralWhite;
+            basicEffect.FogColor = (Vector3)Color.Pink;
             basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
-            basicEffect.FogEnabled = false;
+            basicEffect.FogEnabled = true;
             position = new Vector3();
 
             primitive = ToDispose(GeometricPrimitive.Cylinder.New(graphicsDevice));
@@ -332,22 +333,22 @@ namespace MusicWall3D
                 currentPoints = new List<Vector2>();
             }
            
-            if (mouseState.X >= 0.7 && mouseState.X <= 0.73 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            if (mouseState.X >= 0.69 && mouseState.X <= 0.725 && mouseState.left && 0.91f <= mouseState.Y && mouseState.Y <= 0.97f)
             {
                 paletteColor = 0;
             }
 
-            else if (mouseState.X >= 0.78 && mouseState.X <= 0.81 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            else if (mouseState.X >= 0.77 && mouseState.X <= 0.805 && mouseState.left && 0.91f <= mouseState.Y && mouseState.Y <= 0.97f)
             {
                 paletteColor = 1;
             }
 
-            else if (mouseState.X >= 0.86 && mouseState.X <= 0.89 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            else if (mouseState.X >= 0.85 && mouseState.X <= 0.885 && mouseState.left && 0.91f <= mouseState.Y && mouseState.Y <= 0.97f)
             {
                 paletteColor = 2;
             }
 
-            else if (mouseState.X >= 0.94 && mouseState.X <= 0.97 && mouseState.left && 0.93f <= mouseState.Y && mouseState.Y <= 0.99f)
+            else if (mouseState.X >= 0.93 && mouseState.X <= 0.965 && mouseState.left && 0.91f <= mouseState.Y && mouseState.Y <= 0.97f)
             {
                 paletteColor = 3;
             }
@@ -663,23 +664,48 @@ namespace MusicWall3D
             }
             // ----- END GUIDE LINES --------------
            
+            
+            //-------PALETTE------------------------------
             float xPs = 0.7f;
 
-            foreach (Color4 pColor in palette2)
-            {               
-                basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
-                    Matrix.RotationX(deg2rad(90.0f)) *
-                    Matrix.RotationY(0) *
-                    Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(xPs, 0.93f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.2f));
+            for(int i = 0; i < 4; i++)//foreach (Color4 pColor in palette2)
+            {
+                if (i == paletteColor)
+                {
+                    basicEffect.World = Matrix.Scaling(0.7f, 0.001f, 0.7f) *
+                        Matrix.RotationX(deg2rad(90.0f)) *
+                        Matrix.RotationY(0) *
+                        Matrix.RotationZ(0) *
+                        Matrix.Translation(screenToWorld(new Vector3(xPs, 0.93f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.199f));
 
-                basicEffect.DiffuseColor = pColor;
-                paletteCube.Draw(basicEffect);
+                    basicEffect.DiffuseColor = new Color4(255,255,255,255);
+                    paletteCube.Draw(basicEffect);
+
+                   /* basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
+                        Matrix.RotationX(deg2rad(90.0f)) *
+                        Matrix.RotationY(0) *
+                        Matrix.RotationZ(0) *
+                        Matrix.Translation(screenToWorld(new Vector3(xPs, 0.93f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.2f));
+
+                    basicEffect.DiffuseColor = palette2[i];
+                    paletteCube.Draw(basicEffect);*/
+                }
+               // else
+                //{
+                    basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
+                        Matrix.RotationX(deg2rad(90.0f)) *
+                        Matrix.RotationY(0) *
+                        Matrix.RotationZ(0) *
+                        Matrix.Translation(screenToWorld(new Vector3(xPs, 0.93f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.2f));
+
+                    basicEffect.DiffuseColor = palette2[i];
+                    paletteCube.Draw(basicEffect);
+                //}
                 xPs = xPs + 0.08f;
             }
 
             
-
+            //----------END PALETTE-------------------------
 
 
             // --- Trying to add anti-aliasing

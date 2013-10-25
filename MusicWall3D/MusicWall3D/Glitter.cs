@@ -14,7 +14,7 @@ namespace ParticleLibrary
 	{   
         public Glitter(float x, float y, int life, int seed, int type): base(x, y, life, seed)
 		{
-            velocity.X = ran.NextFloat(-0.0002f, 0.0002f);
+            velocity.X = ran.NextFloat(-0.0004f, 0.0002f);
             velocity.Y = -0.0003f;            			
 			acceleration.X = -0.000005f;
 			acceleration.Y = 0.00001f;
