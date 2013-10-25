@@ -74,6 +74,7 @@ namespace MusicWall3D
 
         private ParticleSystem pSystem;// a particle system
         private GeometricPrimitive g;
+        private GeometricPrimitive fireWork;
         private GeometricPrimitive paletteCube;
 
         private Color[] white = new Color[] { Color.DarkSeaGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
@@ -220,6 +221,7 @@ namespace MusicWall3D
         {
             //bloomEffect = ToDispose(new Effect(graphicsDevice, ShaderBytecode.Compile(Resources.Bloom, "fx_4_0").Bytecode));
             g = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));//p.getShape();
+            fireWork = ToDispose(GeometricPrimitive.GeoSphere.New(graphicsDevice));
             paletteCube = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
 
             timeLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
@@ -460,9 +462,19 @@ namespace MusicWall3D
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
                     if (Math.Abs(l.X - xTL) <= particleFrequency + 0.0005)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
-                        for (int j = 0; j < 1; j++)
+                        if (objects[pc].Count < 4)
                         {
-                            pSystem.addParticle(l.X, l.Y, objectColor[pc]);
+                            for (int j = 0; j < 1; j++)
+                            {
+                                pSystem.addParticle(l.X, l.Y, 4, objectColor[pc]);
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 0; j < 1; j++)
+                            {
+                                pSystem.addParticle(l.X, l.Y, 0, objectColor[pc]);
+                            }
                         }
                     }
                 }
@@ -620,15 +632,33 @@ namespace MusicWall3D
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
-                basicEffect.World = Matrix.Scaling(0.1f, 0.1f, 0.1f) *
-                    Matrix.RotationX(p.getRotationX()) *
-                    Matrix.RotationY(p.getRotationY()) *
-                    Matrix.RotationZ(p.getRotationZ()) *
-                    Matrix.Translation(screenToWorld(new Vector3(p.getX(), p.getY(), 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
+                if (p.type == 4)
+                {
+                    for (int k = 0; k < 10; k++)
+                    {
+                        basicEffect.World = Matrix.Scaling((0.1f - k*0.01f), (0.1f - k*0.01f), (0.1f - k*0.01f)) *
+                            Matrix.RotationX(p.getRotationX()) *
+                            Matrix.RotationY(p.getRotationY()) *
+                            Matrix.RotationZ(p.getRotationZ()) *
+                            Matrix.Translation(screenToWorld(new Vector3(p.getX() - (p.velocity.X * (k*2)), p.getY() - (p.velocity.Y * (k*2)), 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
 
-               // Color4 color = p.getColor();
-                basicEffect.DiffuseColor = p.getColor(); //color;
-                g.Draw(basicEffect);
+                        // Color4 color = p.getColor();
+                        basicEffect.DiffuseColor = p.getColor(); //color;
+                        fireWork.Draw(basicEffect);
+                    }
+                }
+                else
+                {
+                    basicEffect.World = Matrix.Scaling(0.1f, 0.1f, 0.1f) *
+                        Matrix.RotationX(p.getRotationX()) *
+                        Matrix.RotationY(p.getRotationY()) *
+                        Matrix.RotationZ(p.getRotationZ()) *
+                        Matrix.Translation(screenToWorld(new Vector3(p.getX(), p.getY(), 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
+
+                    // Color4 color = p.getColor();
+                    basicEffect.DiffuseColor = p.getColor(); //color;
+                    g.Draw(basicEffect);
+                }
             }
 
             /**END PARTICLE DRAW********************************************************************/

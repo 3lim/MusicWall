@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArrayUtil.cs" />
+    <Compile Include="Fireworks.cs" />
     <Compile Include="DataManager.cs" />
     <Compile Include="Glitter.cs" />
     <Compile Include="Loess.cs" />

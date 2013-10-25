@@ -21,10 +21,18 @@ namespace ParticleLibrary
 
         }
 
-        public void addParticle(float x, float y, int type)//, ParticleType p, int life)
+        public void addParticle(float x, float y, int type, int cType)//, ParticleType p, int life)
         {
             int i = ran.Next(1, 100);
-            pSystem.Add(new Glitter(x, y, 400, i, type));
+            if (type != 4)
+            {
+                pSystem.Add(new Glitter(x, y, 400, i, type, cType));
+            }
+
+            else
+            {
+                pSystem.Add(new Fireworks(x, y, 400, i, type, cType));
+            }
         }
 
         public List<Particle> getList()

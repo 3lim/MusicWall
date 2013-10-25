@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using SharpDX;
 using SharpDX.Toolkit;
@@ -10,20 +10,21 @@ using SharpDX.D3DCompiler;
 
 namespace ParticleLibrary
 {
-	public class Glitter: Particle
-	{   
-        public Glitter(float x, float y, int life, int seed, int type, int cT): base(x, y, life, seed, type, cT)
-		{
-            velocity.X = ran.NextFloat(-0.0004f, 0.0002f);
-            velocity.Y = -0.0003f;            			
-			acceleration.X = -0.000005f;
-			acceleration.Y = 0.00001f;
+    public class Fireworks : Particle
+    {
+        public Fireworks(float x, float y, int life, int seed, int type, int cT)
+            : base(x, y, life, seed, type, cT)
+        {
+            velocity.X = ran.NextFloat(-0.0008f, 0.0008f);
+            velocity.Y = ran.NextFloat(-0.0006f, 0.0001f);
+            acceleration.X = ran.NextFloat(-0.000004f, 0.000004f);
+            acceleration.Y = ran.NextFloat(-0.0000004f, 0.00004f);
             setColor(cT);
 
             float f = ran.NextFloat(0.0f, 0.3f);
-      
-    
-		}
+
+
+        }
 
         public override Color4 getColor()
         {
@@ -37,6 +38,7 @@ namespace ParticleLibrary
         }
         public void setColor(int c)
         {
+
             if (c == 0)
             {
                 color.Red = 1.0f;// ran.NextFloat(0.2f, 0.6f);
@@ -91,6 +93,6 @@ namespace ParticleLibrary
         {
 
         }
-	}
+    }
 }
 

@@ -20,6 +20,8 @@ namespace ParticleLibrary
         public GeometricPrimitive shape;
         public float xpos;
         public float ypos;
+        public int type;
+        public int cType;
         public int lifespan;
         public int sizeX;
         public int sizeY;
@@ -28,7 +30,7 @@ namespace ParticleLibrary
         public float rotationZ;
         public Random ran;
 
-		public Particle (float x, float y, int life, int seed)
+		public Particle (float x, float y, int life, int seed, int t, int cT)
 		{
             ran = new Random(seed);
             this.xpos = x + ran.NextFloat(-0.002f, 0.002f);
@@ -36,7 +38,9 @@ namespace ParticleLibrary
             rotationX = ran.NextFloat(1.0f, 100.0f);
             rotationY = ran.NextFloat(1.0f, 100.0f);
             rotationZ = ran.NextFloat(1.0f, 100.0f);
-            lifespan = life;            
+            lifespan = life;
+            type = t;
+            cType = cT;
 		}
 
 		public void updatePos()
@@ -107,6 +111,16 @@ namespace ParticleLibrary
 		{
             return this.ypos;
 		}
+
+        public virtual float getOldX()
+        {
+            return this.xpos-this.velocity.X;
+        }
+
+        public virtual float getOldY()
+        {
+            return this.ypos-this.velocity.Y;
+        }
 
         public virtual float getRotationX()
         {
