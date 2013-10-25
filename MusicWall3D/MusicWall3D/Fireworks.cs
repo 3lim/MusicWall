@@ -15,10 +15,10 @@ namespace ParticleLibrary
         public Fireworks(float x, float y, int life, int seed, int type, int cT)
             : base(x, y, life, seed, type, cT)
         {
-            velocity.X = ran.NextFloat(-0.0008f, 0.0008f);
-            velocity.Y = ran.NextFloat(-0.0006f, 0.0001f);
-            acceleration.X = ran.NextFloat(-0.000004f, 0.000004f);
-            acceleration.Y = ran.NextFloat(-0.0000004f, 0.00004f);
+            velocity.X = ran.NextFloat(-0.001f, 0.001f);
+            velocity.Y = ran.NextFloat(-0.002f, 0.0f);
+            acceleration.X = ran.NextFloat(-0.0000004f, 0.0000004f);
+            acceleration.Y = 0.00002f;
             setColor(cT);
 
             float f = ran.NextFloat(0.0f, 0.3f);

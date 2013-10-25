@@ -254,6 +254,7 @@ namespace MusicWall3D
             palette2[1] = new Color4(0.814f, 0.0f, 0.475f, 1.0f);
             palette2[2] = new Color4(0.49f, 0.0f, 0.851f, 1.0f);
             palette2[3] = new Color4(0.0f, 0.0f, 1.0f, 1.0f);
+            
 
 
             //// Bloom Effect
@@ -343,8 +344,7 @@ namespace MusicWall3D
                 objects.Clear();
                 splines.Clear();
                 objectColor.Clear();
-                //currentColor.Clear();
-
+               // currentColor.Clear();
                 currentPoints = new List<Vector2>();
             }
            
@@ -477,7 +477,7 @@ namespace MusicWall3D
                     {
                         if (objects[pc].Count < 4)
                         {
-                            for (int j = 0; j < 1; j++)
+                            for (int j = 0; j < 10; j++)
                             {
                                 pSystem.addParticle(l.X, l.Y, 4, objectColor[pc]);
                             }
