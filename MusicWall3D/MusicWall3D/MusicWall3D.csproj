@@ -32,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Bespoke.Common, Version=5.0.0.0, Culture=neutral, PublicKeyToken=843a094264521388, processorArchitecture=x86">
@@ -46,6 +47,9 @@
       <HintPath>..\..\KinectLibrary\KinectLibrary\bin\Release\KinectLibrary.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="SharpDX.Direct3D11.Effects">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SharpDX\Bin\DirectX11-net40\SharpDX.Direct3D11.Effects.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -62,6 +66,7 @@
     <Compile Include="ArrayUtil.cs" />
     <Compile Include="DataManager.cs" />
     <Compile Include="Glitter.cs" />
+    <Compile Include="InstancedGeometricPrimitive.cs" />
     <Compile Include="Loess.cs" />
     <Compile Include="Particle.cs" />
     <Compile Include="ParticleSystem.cs" />
@@ -88,6 +93,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\BasicEffect.fx" />
+    <None Include="Resources\MeshRenderer.fx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SharpDXSdkDir)\SharpDX.targets" />

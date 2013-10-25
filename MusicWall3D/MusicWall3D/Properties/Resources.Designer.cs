@@ -63,9 +63,29 @@ namespace MusicWall3D.Properties {
         /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Byte[].
         /// </summary>
+        internal static byte[] BasicEffect {
+            get {
+                object obj = ResourceManager.GetObject("BasicEffect", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Byte[].
+        /// </summary>
         internal static byte[] Bloom {
             get {
                 object obj = ResourceManager.GetObject("Bloom", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Byte[].
+        /// </summary>
+        internal static byte[] MeshRenderer {
+            get {
+                object obj = ResourceManager.GetObject("MeshRenderer", resourceCulture);
                 return ((byte[])(obj));
             }
         }
