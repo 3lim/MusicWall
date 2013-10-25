@@ -87,6 +87,12 @@ namespace MusicWall3D
 
         private int paletteColor = 3; //which color to draw with
 
+        // GRADIENT BACKGROUND
+        private List<GeometricPrimitive> backgroundElts;
+         // bottom color: RGB (/100) = (32, 30, 38)
+         // top color: RGB (/100) = (62, 85, 84)
+        private float[] bckgdTopColor = new float[] { 0.62f, 0.85f, 0.84f };
+        private float[] gradientBckgdColor = new float[] { 0.30f, 0.55f, 0.46f };
 
         private GeometricPrimitive timeLine;
         private List<GeometricPrimitive> guideLines;
@@ -231,8 +237,15 @@ namespace MusicWall3D
                 guideLines.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
             }
 
-            //Palette colours
-            palette[0] = white;
+            // gradient background
+            backgroundElts = new List<GeometricPrimitive>();
+            for (int i = 0; i < 55; i++)
+            {
+                backgroundElts.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
+            }
+
+                //Palette colours
+                palette[0] = white;
             palette[1] = blue;
             palette[2] = pink;
             palette[3] = lilac;
@@ -538,8 +551,7 @@ namespace MusicWall3D
             // offline rendering
             graphicsDevice.SetRenderTargets(graphicsDevice.DepthStencilBuffer, graphicsDevice.BackBuffer);
 
-            graphicsDevice.Clear(new Color4(0.316f, 0.451f, 0.473f, 1.0f));//Background color 
-
+            graphicsDevice.Clear(new Color4(0.316f, 0.451f, 0.473f, 1.0f));//Background color
 
             float aspectRatio = (float)graphicsDevice.BackBuffer.Width / graphicsDevice.BackBuffer.Height;
             
@@ -677,17 +689,16 @@ namespace MusicWall3D
             // ------- END TIME LINE -------------
 
             // ----- GUIDE LINES ------------------
-            int screenWidth = graphicsDevice.BackBuffer.Width;
             float glY = 0.0f;
             foreach(GeometricPrimitive gl in guideLines)
             {
                 glY += 0.1f;
-                basicEffect.World = Matrix.Scaling(screenWidth, 0.0f, 0.022f) *
+                basicEffect.World = Matrix.Scaling(graphicsDevice.BackBuffer.Width, 0.0f, 0.022f) *
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
                     Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
-                                                    + new Vector3(0, 0, 0.5f));
+                                                    + new Vector3(0, 0, 0.1f));
                 
                 basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
                 gl.Draw(basicEffect);
@@ -736,6 +747,44 @@ namespace MusicWall3D
 
             
             //----------END PALETTE-------------------------
+
+
+            // -------- GRADIENT BACKGROUND ----------------
+            glY = -0.02f;
+      /*      float redY = bckgdTopColor[0];
+            float greenY = bckgdTopColor[1];
+            float blueY = bckgdTopColor[2];
+            float deltaRed = gradientBckgdColor[0] / 55;
+            float deltaGreen = gradientBckgdColor[1] / 55;
+            float deltaBlue = gradientBckgdColor[2] / 55; */
+
+            float redY = 0.0f;
+            float greenY = 1.0f;
+            float blueY = 1.0f;
+        
+            basicEffect.LightingEnabled = false;
+            foreach (GeometricPrimitive elt in backgroundElts)
+            {
+                glY += 0.02f;
+                greenY -= 0.022f;
+                blueY -= 0.018f;
+              //  redY -= deltaRed;
+              //  greenY -= deltaGreen;
+              //  blueY -= deltaBlue;
+                basicEffect.World = Matrix.Scaling(graphicsDevice.BackBuffer.Width, 0.05f, 0.2f) *
+                    Matrix.RotationX(deg2rad(90.0f)) *
+                    Matrix.RotationY(0) *
+                    Matrix.RotationZ(0) *
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                                                    + new Vector3(0, 0, 0.2f));
+
+                basicEffect.DiffuseColor = new Color4(redY, greenY, blueY, 0.0f);
+                elt.Draw(basicEffect);
+            }
+            basicEffect.LightingEnabled = true;
+            // --------- END GRADIENT BACKGROUND -----------
+
+
 
 
             // --- Trying to add anti-aliasing
