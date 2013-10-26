@@ -18,10 +18,17 @@ using System.Diagnostics;
 
 namespace MusicWall3D
 {
+    public struct Wave
+    {
+        public short lastVal;
+        public int lastFreq;
+        public int offset;
+    }
 
-        public class Sound
-        {
-            private SecondarySoundBuffer secondarySoundBuffer;
+    public class Sound
+    
+    {
+        private SecondarySoundBuffer secondarySoundBuffer;
             private BufferCapabilities capabilities;
             private int soundLength = 10;
             WaveFormat waveFormat;
@@ -89,15 +96,17 @@ namespace MusicWall3D
                 lastFreq = -1;
                 lastVal = -1;                
                 int numberOfSamples = capabilities.BufferBytes / waveFormat.BlockAlign;
+                var tmpSound = new short[sounds.Length];
 
-                Debug.WriteLine(points.Count);
+                //Debug.WriteLine(points.Count);
                 if (points.Count == 1)
                 {
                     Note(points[0]);
                 }
                 else
                 {
-                    offset = (int)(points[0].X * numberOfSamples);
+                    Wave waveInfo = new Wave { lastVal = -1, lastFreq = -1, offset = 1 };
+                    waveInfo.offset = (int)(points[0].X * numberOfSamples);
                     foreach (Vector2 p in points)
                     {
                         if (p.X <= 1)
@@ -106,16 +115,20 @@ namespace MusicWall3D
                             {
                                 if (freq != -1)
                                 {
-                                    //short value = (short)(Math.Sin(2 * Math.PI * (freq) * i / waveFormat.SampleRate) * 1000); // Not too loud
-                                    short value = smoothCurve(freq, i);
-                                    sounds[i] = (short)((int)sounds[i] + (int)value - (int)(sounds[i] * value) / short.MaxValue);
+                                    short value = smoothCurve(freq, i, ref waveInfo);
+                                    tmpSound[i] = value;
                                 }
                                 i++;
                             }
                             freq = (int)(800 - p.Y * 800);
                         }
                     }
-                    // Lock the buffer
+                    backPass(ref tmpSound, i-1);
+                    for(int j = 0; j<sounds.Length;j++)
+                    {
+                        sounds[j] = (short)((int)sounds[j] + (int)tmpSound[j] - (int)(sounds[j] * tmpSound[j]) / short.MaxValue);
+                    }
+                        // Lock the buffer
                     DataStream dataPart2;
                     var dataPart1 = secondarySoundBuffer.Lock(0, capabilities.BufferBytes, LockFlags.EntireBuffer, out dataPart2);
                     foreach (short value in sounds)
@@ -143,22 +156,50 @@ namespace MusicWall3D
 
             }
 
-            private short smoothCurve(int freq, int i) {
-                if (lastFreq == -1)
-                    lastFreq = freq;
-                short value = (short)(Math.Sin(2 * Math.PI * (lastFreq) * (i-offset) / waveFormat.SampleRate) * 1000); // Not too loud
-                if (freq != lastFreq)
+            //TODO makt some sort of object.
+            private short smoothCurve(int freq, int i, ref Wave info) {
+                if (info.lastFreq == -1)
                 {
-                    if (lastVal < 0 && value >= 0)
+                    info.lastFreq = freq;
+                    //Debug.WriteLine("HEJ");
+                }
+                short value = (short)(Math.Sin(2 * Math.PI * (info.lastFreq) * (i - info.offset) / waveFormat.SampleRate) * 1000); // Not too loud
+                if (freq != info.lastFreq)
+                {
+                    if (info.lastVal < 0 && value >= 0)
                     {
-                        lastFreq = freq;
-                        offset = i;
-                        value = (short)(Math.Sin(2 * Math.PI * (lastFreq) * (i - offset) / waveFormat.SampleRate) * 1000); // Not too loud
+                        info.lastFreq = freq;
+                        info.offset = i;
+                        value = (short)(Math.Sin(2 * Math.PI * (info.lastFreq) * (i - info.offset) / waveFormat.SampleRate) * 1000); // Not too loud
                     }
                 }
-                lastVal = value;
+                info.lastVal = value;
                 return value;
             }
+            private short squareCurve(int freq, int i, ref Wave info) {
+                short value = smoothCurve(freq, i, ref info);
+                if (value > 0)
+                    value = 1000;
+                else
+                    value = -1000;
+                return value;
+            }
+
+            private void backPass(ref short[] tmpSound,int i) {
+                short lastVal = tmpSound[i];
+                short value = 0;
+                i--;
+                for (; i > 0; i--) {
+                    value = tmpSound[i];
+                    if (lastVal < 0 && value >= 0)
+                        break;
+                    else
+                    {
+                        tmpSound[i] = 0;
+                        lastVal = value;
+                    }
+                }
+            } 
 
             private void Kick()
             {
@@ -168,14 +209,18 @@ namespace MusicWall3D
             }
             private void Note(Vector2 point)
             {
-                int freq = (int)(point.Y * 800);
+                int freq = (int)(800 - point.Y * 800);
                 lastFreq = -1;
                 lastVal = -1;
                 int numberOfSamples = capabilities.BufferBytes / waveFormat.BlockAlign;
                 int i = (int)(point.X * numberOfSamples);
-                offset = i;
-                for (int j = 0; j < 10000; j++) {
-                    short value = (short)((smoothCurve(freq, i)*2.0f*(float)(10000-j)/10000.0f));
+                Wave waveInfo1 = new Wave { lastVal = -1, lastFreq = -1, offset = i };
+                Wave waveInfo2 = new Wave { lastVal = -1, lastFreq = -1, offset = i };
+                for (int j = 0; j < 10000; j++)
+                {
+                    short value = (short)(smoothCurve(freq, i, ref waveInfo1)*2);
+                    value += smoothCurve(freq*2, i, ref waveInfo1);
+                    value = (short)(value * (float)(10000 - j) / 10000.0f);
                     sounds[i] = (short)((int)sounds[i] + (int)value - (int)(sounds[i] * value) / short.MaxValue);
                     i++;
                     if (i == sounds.Length)
