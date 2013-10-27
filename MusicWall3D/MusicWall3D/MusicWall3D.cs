@@ -122,6 +122,7 @@ namespace MusicWall3D
         //TODO
         private Stopwatch stopWatch;
         private TimeSpan lastUpdate;
+        private Sound sound;
 
         public MusicWall3D()
         {
@@ -136,12 +137,15 @@ namespace MusicWall3D
             stopWatch.Start();
             lastUpdate = stopWatch.Elapsed;
 
+
         }
 
         public void Run()
         {
             form = new RenderForm("ComposIt");
             form.ClientSize = new Size(1380, 768);
+            //TODO
+            sound = new Sound(form.Handle);
 
             form.KeyDown += (target, arg) =>
             {
@@ -345,6 +349,8 @@ namespace MusicWall3D
                 splines.Clear();
                 objectColor.Clear();
                // currentColor.Clear();
+                sound.Clear();
+
                 currentPoints = new List<Vector2>();
             }
            
@@ -429,6 +435,7 @@ namespace MusicWall3D
                     objects.Add(currentPoints);
                     objectColor.Add(paletteColor);
                     splines.Add(currentSpline);
+                    sound.addCurve(currentPoints);
                 }
      
             }
@@ -495,7 +502,7 @@ namespace MusicWall3D
  
             if (lastUpdate.Seconds != tmp.Seconds)
             {
-                Sound sound = new Sound();
+                
                 lastUpdate = tmp;
                 float last, first;
 
@@ -507,7 +514,7 @@ namespace MusicWall3D
                     last = (list.Last()[0]) + 0.05f;
                     if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
                     {
-                        sound.Play(list[0].Y);                      
+//                        sound.Play(list[0].Y);                      
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -515,7 +522,7 @@ namespace MusicWall3D
 
                 }
             }
-        }
+        } 
 
         private void addParticles()
         {
@@ -534,10 +541,8 @@ namespace MusicWall3D
                         float x = list[0].X;
                         float y = list[0].Y;
                     }
-                    //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
-                    //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
-                    //Debug.WriteLine(0.5f);
-                }              
+
+                }
             }
         }
 
