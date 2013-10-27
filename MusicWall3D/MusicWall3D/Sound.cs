@@ -120,7 +120,11 @@ namespace MusicWall3D
                                 }
                                 i++;
                             }
-                            freq = (int)(800 - p.Y * 800);
+//                            freq = (int)(880 - p.Y * 880);
+                            double a = Math.Pow(2.0, 1.0 / 12.0);
+                            double power = -p.Y * 3*12;
+                            freq = (int)(880 * Math.Pow(a, power));
+
                         }
                     }
                     backPass(ref tmpSound, i-1);
@@ -209,7 +213,10 @@ namespace MusicWall3D
             }
             private void Note(Vector2 point)
             {
-                int freq = (int)(800 - point.Y * 800);
+                double a = Math.Pow(2.0, 1.0 / 12.0);
+                double power = -point.Y*3*12;
+                int freq = (int)(880 * Math.Pow(a,power));
+                Debug.WriteLine(freq);
                 lastFreq = -1;
                 lastVal = -1;
                 int numberOfSamples = capabilities.BufferBytes / waveFormat.BlockAlign;
