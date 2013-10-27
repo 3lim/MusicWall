@@ -203,9 +203,5 @@ technique11 Render
 		SetVertexShader(CompileShader(vs_4_0, BasicVS()));
 		SetGeometryShader(NULL);
 		SetPixelShader(CompileShader(ps_4_0, BasicPS()));
-		//
-		//SetRasterizerState(rsCullBack);
-		//SetDepthStencilState(EnableDepth, 0);
-		//SetBlendState(NoBlending, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
 	}
 }

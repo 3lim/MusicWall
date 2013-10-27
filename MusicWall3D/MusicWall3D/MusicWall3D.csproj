@@ -96,7 +96,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\BasicEffect.fx" />
-    <None Include="Resources\MeshRenderer.fx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SharpDXSdkDir)\SharpDX.targets" />

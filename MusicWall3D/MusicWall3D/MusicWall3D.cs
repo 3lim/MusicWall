@@ -56,7 +56,7 @@ namespace MusicWall3D
 
         public mState mouseState;
 
-        private List<List<Vector2>> objects;
+        private List<DrawObject> objects;
 
         private List<Spline> splines;
 
@@ -67,7 +67,7 @@ namespace MusicWall3D
         private const float frequency = 0.005f;
         private const float pointFrequency = 0.005f;
         private const float minDistance = 0.015f;
-        private const float particleFrequency = 0.000f;
+        private const float particleFrequency = 0.0001f;
 
         private Color[] colorList = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};
 
@@ -92,6 +92,9 @@ namespace MusicWall3D
 
         private Vector3 position;
 
+        private Vector2 lastPosition;
+        private float lastRemoveEvent = 0.0f;
+
         private const int NumberOfThreads = 16;
 
         private Device device;
@@ -106,12 +109,18 @@ namespace MusicWall3D
         private Stopwatch stopWatch;
         private TimeSpan lastUpdate;
 
+        struct DrawObject
+        {
+            public Vector2 Position;
+            public int InstanceId;
+        }
+
         public MusicWall3D()
         {
 
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
             pSystem = new ParticleSystem();
-            objects = new List<List<Vector2>>();
+            objects = new List<DrawObject>();
             splines = new List<Spline>();
             //TODO
             stopWatch = new Stopwatch();
@@ -173,7 +182,7 @@ namespace MusicWall3D
             //Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.None, desc, out device, out swapChain);
             //device = ToDispose(device);
 
-            graphicsDevice = ToDispose(GraphicsDevice.New(DriverType.Hardware,DeviceCreationFlags.Debug));
+            graphicsDevice = ToDispose(GraphicsDevice.New(DriverType.Hardware));
 
             PresentationParameters pp = new PresentationParameters(desc.ModeDescription.Width,desc.ModeDescription.Height,desc.OutputHandle,desc.ModeDescription.Format);
             pp.MultiSampleCount = MSAALevel.X8;
@@ -322,10 +331,36 @@ namespace MusicWall3D
 
             if (mouseState.right)
             {
-                objects.Clear();
-                splines.Clear();
+                if (gameTime.TotalGameTime.TotalSeconds - lastRemoveEvent >= frequency && (new Vector2(mouseState.X,mouseState.Y)-lastPosition).Length() >= minDistance)
+                {
+                    lastPosition = new Vector2(mouseState.X, mouseState.Y);
+                    lastRemoveEvent = (float)gameTime.TotalGameTime.TotalSeconds;
 
-                currentPoints = new List<Vector2>();
+                    for(int i=0;i<objects.Count;i++)
+                    {
+                        if ((lastPosition - objects[i].Position).Length() < minDistance * 2.0f)
+                        {
+
+                            for (int j = 0; j < objects.Count; j++)
+                            {
+                                if (objects[j].InstanceId > objects[i].InstanceId)
+                                {
+                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1 };
+                                }
+                            }
+
+                            instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+                            objects.RemoveAt(i);
+                            i--;
+                        }
+                    }
+
+
+                }
+                //objects.Clear();
+                //splines.Clear();
+
+                //currentPoints = new List<Vector2>();
             }
 
             if (mouseState.left)//position.Z < 50)
@@ -381,18 +416,22 @@ namespace MusicWall3D
                 drawingStarted = false;
                 if (currentSpline != null)
                 {
-                    objects.Add(currentPoints);
 
                     foreach (var p in currentPoints)
                     {
                         InstancedGeometricPrimitive.InstanceType point;
+                        DrawObject o;
 
                         computePointData(new Vector3(p,5.0f),out point.World);
                         point.Color = (Vector4)pickColor(p.Y);
 
-                        instancedGeo.AddToRenderPass(cylinder, point);
+                        o.InstanceId = instancedGeo.AddToRenderPass(cylinder, point);
+                        o.Position = p;
+
+                        objects.Add(o);
                     }
 
+                    currentPoints.Clear();
                     splines.Add(currentSpline);
                 }
             }
@@ -420,7 +459,7 @@ namespace MusicWall3D
             removeP.Clear();
 
             /**END PARTICLE UPDATE********************************************************************/
-
+            PlaySounds();
 
             
 
@@ -431,12 +470,11 @@ namespace MusicWall3D
         {
             TimeSpan tmp = stopWatch.Elapsed;
 
-            foreach (List<Vector2> list in objects)
-            {
 
                 //**********PARTICLE TEST***//
-                foreach (Vector2 l in list)
+                foreach (var o in objects)
                 {
+                    Vector2 l = o.Position;
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
                     if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
@@ -446,21 +484,20 @@ namespace MusicWall3D
                         }
                     }
                 }
-            }
             if (lastUpdate.Seconds != tmp.Seconds)
             {
                 Sound sound = new Sound();
                 lastUpdate = tmp;
                 float last, first;
-                foreach (List<Vector2> list in objects)
+                foreach (var o in objects)
                 {
-                    if (list.Count == 0) continue;
+                    Vector2 l = o.Position;
 
-                    first = list[0][0] - 0.05f;
-                    last = (list.Last()[0]) + 0.05f;
+                    first = l.X - 0.05f;
+                    last = (l.X) + 0.05f;
                     if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
                     {
-                        sound.Play(list[0].Y);                      
+                        sound.Play(l.Y);                      
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -472,25 +509,25 @@ namespace MusicWall3D
 
         private void addParticles()
         {
-            TimeSpan tmp = stopWatch.Elapsed;
-            if (lastUpdate.Seconds != tmp.Seconds)
-            {                
-                lastUpdate = tmp;
-                float last, first;
-                foreach (List<Vector2> list in objects)
-                {
-                    first = list[0][0] - 0.05f;
-                    last = (list.Last()[0]) + 0.05f;
-                    if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
-                    {
-                        float x = list[0].X;
-                        float y = list[0].Y;
-                    }
-                    //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
-                    //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
-                    //Debug.WriteLine(0.5f);
-                }
-            }
+            //TimeSpan tmp = stopWatch.Elapsed;
+            //if (lastUpdate.Seconds != tmp.Seconds)
+            //{                
+            //    lastUpdate = tmp;
+            //    float last, first;
+            //    foreach (List<Vector2> list in objects)
+            //    {
+            //        first = list[0][0] - 0.05f;
+            //        last = (list.Last()[0]) + 0.05f;
+            //        if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
+            //        {
+            //            float x = list[0].X;
+            //            float y = list[0].Y;
+            //        }
+            //        //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
+            //        //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
+            //        //Debug.WriteLine(0.5f);
+            //    }
+            //}
         }
 
 
@@ -513,20 +550,15 @@ namespace MusicWall3D
 
                 for (int i = 0; i < objects.Count; i++)
                 {
-                    if (objects[i].Count == 0) continue;
 
-
-                    for (int j = 0; j < objects[i].Count;j++ )
-                    {
-                        if (objects[i][j].X < xTL - particleFrequency)
+                        if (objects[i].Position.X < xTL - particleFrequency)
                         {
-                            //drawPoint(new Vector3(objects[i][j], 5.0f), new Color4(255, 255, 255, 255));
+                            instancedGeo.ModifyInstance(cylinder,objects[i].InstanceId,null,new Color4(255, 255, 255, 255));
                         }
                         else
                         {
-                            //drawPoint(new Vector3(objects[i][j], 5.0f), (Vector4)pickColor((float)objects[i][j].Y));
+                            instancedGeo.ModifyInstance(cylinder, objects[i].InstanceId, null, (Vector4)pickColor((float)objects[i].Position.Y));
                         }
-                    }
 
                     //List<float> xs = new List<float>();
                     //List<float> ys = new List<float>();
@@ -604,7 +636,7 @@ namespace MusicWall3D
                     drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y));
                 //}
 
-            //instancedGeo.Draw();
+            instancedGeo.Draw();
             
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())

@@ -30,6 +30,16 @@ namespace MusicWall3D
         {
             public Matrix World;
             public Vector4 Color;
+
+            public static bool operator ==(InstanceType a, InstanceType b)
+            {
+                return a.World == b.World && a.Color == b.Color;
+            }
+
+            public static bool operator !=(InstanceType a, InstanceType b)
+            {
+                return !(a == b);
+            }
         }
 
         public struct Primitive
@@ -264,6 +274,12 @@ namespace MusicWall3D
 
         }
 
+        public void ResetInstances(Primitive p)
+        {
+            instanceData[p].Instances.Clear();
+            instanceData[p].InstanceCount = 0;
+        }
+
         public int AddToRenderPass(Primitive p, InstanceType t)
         {
             if (!instanceData.ContainsKey(p)) InitializeBuffers(p);
@@ -289,6 +305,28 @@ namespace MusicWall3D
             toModify[p].Add(instanceId);
 
             invalidateData = true;
+        }
+
+        public void ModifyInstance(Primitive p, int instanceId, Matrix? world = null, Vector4? color = null)
+        {
+            InstanceType t = instanceData[p].Instances[instanceId];
+            if (world != null)
+            {
+                t.World = (Matrix)world;
+            }
+            if (color != null)
+            {
+                t.Color = (Vector4)color;
+            }
+
+            if (t != instanceData[p].Instances[instanceId])
+            {
+                instanceData[p].Instances[instanceId] = t;
+
+                toModify[p].Add(instanceId);
+
+                invalidateData = true;
+            }
         }
 
         public void RemoveFromRenderPass(Primitive p, int instanceId)
@@ -356,8 +394,6 @@ namespace MusicWall3D
 
             effect.GetVariableByName("EyePosition").AsVector().Set(Matrix.Invert(View).TranslationVector);
 
-            //effect.GetVariableByName("lightView").AsVector().Set(LightView);
-            //effect.GetVariableByName("lightColor").AsVector().Set(LightColor);
             effect.GetTechniqueByIndex(0).GetPassByIndex(0).Apply(context);
 
             foreach(var p in instanceData)
