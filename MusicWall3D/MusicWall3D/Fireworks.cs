@@ -15,10 +15,10 @@ namespace ParticleLibrary
         public Fireworks(float x, float y, int life, int seed, int type, int cT)
             : base(x, y, life, seed, type, cT)
         {
-            velocity.X = ran.NextFloat(-0.001f, 0.001f);
-            velocity.Y = ran.NextFloat(-0.002f, 0.0f);
-            acceleration.X = ran.NextFloat(-0.0000004f, 0.0000004f);
-            acceleration.Y = 0.00002f;
+            velocity.X = ran.NextFloat(-0.002f, 0.002f);
+            velocity.Y = ran.NextFloat(-0.004f, 0.0f);
+            acceleration.X = 0;
+            acceleration.Y = 0.00008f;
             setColor(cT);
 
             float f = ran.NextFloat(0.0f, 0.3f);
@@ -41,31 +41,31 @@ namespace ParticleLibrary
 
             if (c == 0)
             {
-                color.Red = 1.0f;// ran.NextFloat(0.2f, 0.6f);
-                color.Green = 1.0f;//f;// ran.NextFloat(0.0f, 0.4f);
-                color.Blue = 1.0f;//ran.NextFloat(0.4f, 1.0f);
+                color.Red = ran.NextFloat(0.2f, 0.6f);
+                color.Green = ran.NextFloat(0.4f, 1.4f);
+                color.Blue = ran.NextFloat(0.2f, 0.6f);
                 color.Alpha = 1.0f;
 
             }
             else if (c == 1)
             {
-                color.Red = 0.0f;// ran.NextFloat(0.2f, 0.6f);
-                color.Green = 0.0f;// f;// ran.NextFloat(0.0f, 0.4f);
+                color.Red = ran.NextFloat(0.2f, 1.6f);
+                color.Green = ran.NextFloat(0.0f, 0.2f);
                 color.Blue = ran.NextFloat(0.4f, 1.0f);
                 color.Alpha = 1.0f;
             }
             else if (c == 2)
             {
-                color.Red = ran.NextFloat(0.2f, 0.6f);
-                color.Green = 0.0f;//f;// ran.NextFloat(0.0f, 0.4f);
-                color.Blue = 0.0f;// ran.NextFloat(0.4f, 1.0f);
+                color.Red = ran.NextFloat(0.7f, 1.4f);
+                color.Green = ran.NextFloat(0.0f, 0.2f);
+                color.Blue = ran.NextFloat(0.6f, 1.8f);
                 color.Alpha = 1.0f;
             }
             else if (c == 3)
             {
                 color.Red = ran.NextFloat(0.2f, 0.6f);
-                color.Green = 0.0f;//f;// ran.NextFloat(0.0f, 0.4f);
-                color.Blue = ran.NextFloat(0.4f, 1.0f);
+                color.Green = ran.NextFloat(0.0f, 0.2f);
+                color.Blue = ran.NextFloat(0.4f, 1.4f);
                 color.Alpha = 1.0f;
             }
 
@@ -73,7 +73,7 @@ namespace ParticleLibrary
             {
                 float f = ran.NextFloat(0.0f, 0.3f);
                 color.Red = ran.NextFloat(0.2f, 0.6f);
-                color.Green = f;// ran.NextFloat(0.0f, 0.4f);
+                color.Green = ran.NextFloat(0.0f, 0.4f);
                 color.Blue = ran.NextFloat(0.4f, 1.0f);
                 color.Alpha = 1.0f;
             }

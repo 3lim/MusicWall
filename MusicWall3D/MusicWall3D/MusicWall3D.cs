@@ -77,10 +77,10 @@ namespace MusicWall3D
         private GeometricPrimitive fireWork;
         private GeometricPrimitive paletteCube;
 
-        private Color[] white = new Color[] { Color.DarkSeaGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
-        private Color[] blue = new Color[] {Color.DarkBlue};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
-        private Color[] pink = new Color[] {Color.DeepPink};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
-        private Color[] lilac = new Color[] {Color.DarkOrchid};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
+        private Color[] green = new Color[] { Color.MediumSpringGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
+        private Color[] pink = new Color[] {Color.Magenta};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
+        private Color[] lilac = new Color[] {Color.Fuchsia};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
+        private Color[] purple = new Color[] {Color.Blue};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
         private Color[][] palette = new Color[4][];
 
         private Color4[] palette2 = new Color4[4];
@@ -196,6 +196,7 @@ namespace MusicWall3D
             //device = ToDispose(device);
 
             graphicsDevice = ToDispose(GraphicsDevice.New(DriverType.Hardware));
+            Cursor.Hide();//Hides cursor
 
             PresentationParameters pp = new PresentationParameters(desc.ModeDescription.Width,desc.ModeDescription.Height,desc.OutputHandle,desc.ModeDescription.Format);
             pp.MultiSampleCount = MSAALevel.X8;
@@ -231,7 +232,7 @@ namespace MusicWall3D
         {
             //bloomEffect = ToDispose(new Effect(graphicsDevice, ShaderBytecode.Compile(Resources.Bloom, "fx_4_0").Bytecode));
             g = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));//p.getShape();
-            fireWork = ToDispose(GeometricPrimitive.GeoSphere.New(graphicsDevice));
+            fireWork = ToDispose(GeometricPrimitive.Sphere.New(graphicsDevice));
             paletteCube = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
 
             timeLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
@@ -248,16 +249,16 @@ namespace MusicWall3D
                 backgroundElts.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
             }
 
-                //Palette colours
-                palette[0] = white;
-            palette[1] = blue;
-            palette[2] = pink;
-            palette[3] = lilac;
+            //Palette colours
+            palette[0] = green;
+            palette[1] = pink;
+            palette[2] = lilac;
+            palette[3] = purple;
 
-            palette2[0] = new Color4(0.165f, 1.0f, 0.502f, 1.0f);
-            palette2[1] = new Color4(0.814f, 0.0f, 0.475f, 1.0f);
-            palette2[2] = new Color4(0.49f, 0.0f, 0.851f, 1.0f);
-            palette2[3] = new Color4(0.0f, 0.0f, 1.0f, 1.0f);
+            palette2[0] = new Color4(0.165f, 1.8f, 0.502f, 1.0f);
+            palette2[1] = new Color4(1.0f, 0.0f, 1.0f, 1.0f);
+            palette2[2] = new Color4(1.6f, 0.0f, 1.9f, 1.0f);
+            palette2[3] = new Color4(0.1f, 0.0f, 2.0f, 1.0f);
             
 
 
@@ -281,7 +282,7 @@ namespace MusicWall3D
             basicEffect.FogColor = (Vector3)Color.Pink;
             basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
-            basicEffect.FogEnabled = true;
+            basicEffect.FogEnabled = false;
             position = new Vector3();
 
             primitive = ToDispose(GeometricPrimitive.Cylinder.New(graphicsDevice));
@@ -426,6 +427,7 @@ namespace MusicWall3D
                     //if(currentPoints.Count > 1) currentSpline.Fit(xs, ys);
                 }
             }
+           
             else if (drawingStarted)
             {
                 drawingStarted = false;
@@ -439,6 +441,7 @@ namespace MusicWall3D
                 }
      
             }
+
 
             /**PARTICLE UPDATE********************************************************************/
 
@@ -484,7 +487,7 @@ namespace MusicWall3D
                     {
                         if (objects[pc].Count < 4)
                         {
-                            for (int j = 0; j < 10; j++)
+                            for (int j = 0; j < 30; j++)
                             {
                                 pSystem.addParticle(l.X, l.Y, 4, objectColor[pc]);
                             }
@@ -642,9 +645,29 @@ namespace MusicWall3D
                     //    //}
                     //}
 
+                    /*if (mouseState.left)//If we want to show that we are drawing
+                        //(this is more suitable for kinect interaction I think)
+                    {
+                        basicEffect.World = Matrix.Scaling(0.5f, 0.05f, 0.5f) *
+                            Matrix.RotationX(deg2rad(90.0f)) *
+                            Matrix.RotationY(0) *
+                            Matrix.RotationZ(0) *
+                            Matrix.Translation(screenToWorld(new Vector3(normalizedPos, 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.200f));
+                        basicEffect.DiffuseColor = new Color4(255,255,255,255);
+                        primitive.Draw(basicEffect);
+                    }*/
 
                     drawPoint(new Vector3(normalizedPos, 5.0f), (Vector4)pickColor(normalizedPos.Y, paletteColor));
 
+
+                    //So that you always see the drawing circle
+                    /*basicEffect.World = Matrix.Scaling(0.4f, 0.05f, 0.4f) *
+                        Matrix.RotationX(deg2rad(90.0f)) *
+                        Matrix.RotationY(0) *
+                        Matrix.RotationZ(0) *
+                        Matrix.Translation(screenToWorld(new Vector3(normalizedPos, 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.201f));
+                    basicEffect.DiffuseColor = (Vector4)pickColor(normalizedPos.Y, paletteColor);
+                    primitive.Draw(basicEffect);*/
             
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
@@ -763,7 +786,7 @@ namespace MusicWall3D
             float deltaGreen = gradientBckgdColor[1] / 55;
             float deltaBlue = gradientBckgdColor[2] / 55; */
 
-            float redY = 0.0f;
+            float redY = 1.0f;
             float greenY = 1.0f;
             float blueY = 1.0f;
         
@@ -771,8 +794,9 @@ namespace MusicWall3D
             foreach (GeometricPrimitive elt in backgroundElts)
             {
                 glY += 0.02f;
-                greenY -= 0.022f;
-                blueY -= 0.018f;
+                redY -= 0.020f;
+                greenY -= 0.020f;//22
+                blueY -= 0.020f;//18
               //  redY -= deltaRed;
               //  greenY -= deltaGreen;
               //  blueY -= deltaBlue;
