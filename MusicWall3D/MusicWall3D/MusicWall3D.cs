@@ -435,10 +435,10 @@ namespace MusicWall3D
 
                         objects.Add(o);
                     }
+                    sound.addCurve(currentPoints);
 
                     currentPoints.Clear();
                     splines.Add(currentSpline);
-                    sound.addCurve(currentPoints);
                 }
             }
 
