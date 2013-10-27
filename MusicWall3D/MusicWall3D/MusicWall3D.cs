@@ -108,6 +108,7 @@ namespace MusicWall3D
         //TODO
         private Stopwatch stopWatch;
         private TimeSpan lastUpdate;
+        private Sound sound;
 
         struct DrawObject
         {
@@ -127,12 +128,15 @@ namespace MusicWall3D
             stopWatch.Start();
             lastUpdate = stopWatch.Elapsed;
 
+
         }
 
         public void Run()
         {
             form = new RenderForm("ComposIt");
             form.ClientSize = new Size(1380, 768);
+            //TODO
+            sound = new Sound(form.Handle);
 
             form.KeyDown += (target, arg) =>
             {
@@ -335,6 +339,7 @@ namespace MusicWall3D
                 {
                     lastPosition = new Vector2(mouseState.X, mouseState.Y);
                     lastRemoveEvent = (float)gameTime.TotalGameTime.TotalSeconds;
+                sound.Clear();
 
                     for(int i=0;i<objects.Count;i++)
                     {
@@ -433,6 +438,7 @@ namespace MusicWall3D
 
                     currentPoints.Clear();
                     splines.Add(currentSpline);
+                    sound.addCurve(currentPoints);
                 }
             }
 
@@ -486,7 +492,7 @@ namespace MusicWall3D
                 }
             if (lastUpdate.Seconds != tmp.Seconds)
             {
-                Sound sound = new Sound();
+                
                 lastUpdate = tmp;
                 float last, first;
                 foreach (var o in objects)
@@ -505,7 +511,7 @@ namespace MusicWall3D
 
                 }
             }
-        }
+        } 
 
         private void addParticles()
         {

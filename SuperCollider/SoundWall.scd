@@ -63,8 +63,8 @@ osc = {SinOsc.ar(freq)};
 osc2 = {SinOsc.ar(freq+2)};
 env = {Line.ar(1, 0, 0.5, doneAction: 2)};
 
-output = osc * env;
-output2 = osc2 * env;
+output = osc * env*0.5;
+output2 = osc2 * env*0.5;
 
 Out.ar(0,
 		[output,output2]
