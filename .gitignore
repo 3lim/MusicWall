@@ -11,3 +11,5 @@
 *.userprefs
 /bin
 /obj
+
+*.cache
