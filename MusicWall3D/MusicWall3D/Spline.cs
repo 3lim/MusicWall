@@ -66,7 +66,10 @@ namespace MusicWall3D
         }
 
         private PathGeometry pGeo;
-        private List<Point> pointList;
+
+        public List<Point> pointList
+        { get; private set; }
+
         private float lastFrequency = 0.01f;
         private List<SharpDX.Vector2> lastSampled;
         float lastDist = 0.0f;

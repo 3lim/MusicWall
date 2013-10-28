@@ -132,6 +132,8 @@ namespace MusicWall3D
         {
             public Vector2 Position;
             public int InstanceId;
+            public int ObjectColor;
+            public int SplineId;
         }
 
         public MusicWall3D()
@@ -394,7 +396,7 @@ namespace MusicWall3D
                             {
                                 if (objects[j].InstanceId > objects[i].InstanceId)
                                 {
-                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1 };
+                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1, ObjectColor=objects[j].ObjectColor,SplineId = objects[j].SplineId };
                                 }
                             }
 
@@ -498,10 +500,12 @@ namespace MusicWall3D
                         DrawObject o;
 
                         computePointData(new Vector3(p,5.0f),out point.World);
-                        point.Color = (Vector4)pickColor(p.Y);
+                        point.Color = (Vector4)pickColor(p.Y,paletteColor);
 
                         o.InstanceId = instancedGeo.AddToRenderPass(cylinder, point);
                         o.Position = p;
+                        o.ObjectColor = paletteColor;
+                        o.SplineId = splines.Count;
 
                         objects.Add(o);
                     }
@@ -557,18 +561,18 @@ namespace MusicWall3D
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
                     if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
-                        if (objects[pc].Count < 4)
+                        if (splines[o.SplineId].pointList.Count < 4)
                         {
                             for (int j = 0; j < 30; j++)
                             {
-                                pSystem.addParticle(l.X, l.Y, 4, objectColor[pc]);
+                                pSystem.addParticle(l.X, l.Y, 4, o.ObjectColor);
                             }
                         }
                         else
                         {
                             for (int j = 0; j < 1; j++)
                             {
-                                pSystem.addParticle(l.X, l.Y, 0, objectColor[pc]);
+                                pSystem.addParticle(l.X, l.Y, 0, o.ObjectColor);
                             }
                         }
                     }
@@ -597,29 +601,6 @@ namespace MusicWall3D
             }
         } 
 
-        private void addParticles()
-        {
-            //TimeSpan tmp = stopWatch.Elapsed;
-            //if (lastUpdate.Seconds != tmp.Seconds)
-            //{                
-            //    lastUpdate = tmp;
-            //    float last, first;
-            //    foreach (List<Vector2> list in objects)
-            //    {
-            //        first = list[0][0] - 0.05f;
-            //        last = (list.Last()[0]) + 0.05f;
-            //        if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
-            //        {
-            //            float x = list[0].X;
-            //            float y = list[0].Y;
-            //        }
-            //        //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
-            //        //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
-            //        //Debug.WriteLine(0.5f);
-            //    }
-            //}
-        }
-
 
         protected void Draw(GameTime gameTime)
         {
@@ -646,7 +627,7 @@ namespace MusicWall3D
                         }
                         else
                         {
-                            instancedGeo.ModifyInstance(cylinder, objects[i].InstanceId, null, (Vector4)pickColor((float)objects[i].Position.Y));
+                            instancedGeo.ModifyInstance(cylinder, objects[i].InstanceId, null, (Vector4)pickColor((float)objects[i].Position.Y,objects[i].ObjectColor));
                         }
 
 
