@@ -68,10 +68,13 @@ namespace MusicWall3D
         private PathGeometry pGeo;
         private List<Point> pointList;
         private float lastFrequency = 0.01f;
+        private List<SharpDX.Vector2> lastSampled;
+        float lastDist = 0.0f;
 
         public Spline(float startX, float startY)
         {
             pointList = new List<Point>();
+            lastSampled = new List<SharpDX.Vector2>();
             pointList.Add(new Point(startX, startY));
             pGeo = new PathGeometry();
             pGeo.Figures.Add(new PathFigure { StartPoint = new Point(startX, startY) });
@@ -110,7 +113,11 @@ namespace MusicWall3D
 
             if (pointList.Count == 1) return ret;
 
-            float fraction = 0.0f;
+            //float xD = (float)pointList[pointList.Count - 1].X - lastSampled[lastSampled.Count - 1].X;
+            //float yD = (float)pointList[pointList.Count - 1].Y - lastSampled[lastSampled.Count - 1].Y;
+
+            //float nDist = (float)Math.Sqrt(xD * xD + yD * yD);
+            float fraction = 0.0f;// nDist / (lastDist + nDist) * 0.8f;
 
             while (fraction + lastFrequency <= 1.0f)
             {
@@ -124,6 +131,7 @@ namespace MusicWall3D
                 {
                     ret.Add(new SharpDX.Vector2((float)currentP.X, (float)currentP.Y));
                     fraction += lastFrequency;
+                    lastDist += (float)dist.Length;
                     lastPoint = currentP;
                 }
                 else

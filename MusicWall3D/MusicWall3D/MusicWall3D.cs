@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TestMySpline;
@@ -55,7 +56,7 @@ namespace MusicWall3D
 
         public mState mouseState;
 
-        private List<List<Vector2>> objects;
+        private List<DrawObject> objects;
         private List<int> objectColor;
 
         private List<Spline> splines;
@@ -64,11 +65,10 @@ namespace MusicWall3D
         private List<Vector2> currentPoints = new List<Vector2>();
         private bool drawingStarted = false;
         private float lastEvent = 0.0f;
-
         private const float frequency = 0.005f;
-        private const float pointFrequency = 0.004f;
-        private const float minDistance = 0.025f;
-        private const float particleFrequency = 0.0005f;
+        private const float pointFrequency = 0.005f;
+        private const float minDistance = 0.015f;
+        private const float particleFrequency = 0.0001f;
 
         private Color[] colorList = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};
 
@@ -77,7 +77,8 @@ namespace MusicWall3D
         private GeometricPrimitive fireWork;
         private GeometricPrimitive paletteCube;
 
-        private Color[] green = new Color[] { Color.MediumSpringGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
+        private InstancedGeometricPrimitive.Primitive cylinder;
+        private InstancedGeometricPrimitive instancedGeo;        private Color[] green = new Color[] { Color.MediumSpringGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
         private Color[] pink = new Color[] {Color.Magenta};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
         private Color[] lilac = new Color[] {Color.Fuchsia};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
         private Color[] purple = new Color[] {Color.Blue};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
@@ -109,6 +110,9 @@ namespace MusicWall3D
 
         private Vector3 position;
 
+        private Vector2 lastPosition;
+        private float lastRemoveEvent = 0.0f;
+
         private const int NumberOfThreads = 16;
 
         private Device device;
@@ -124,12 +128,18 @@ namespace MusicWall3D
         private TimeSpan lastUpdate;
         private Sound sound;
 
+        struct DrawObject
+        {
+            public Vector2 Position;
+            public int InstanceId;
+        }
+
         public MusicWall3D()
         {
 
             /*ADD PARTICLES, THIS SHOULD BE DONE WHEN WE WANT PARTICLES******************************/
             pSystem = new ParticleSystem();
-            objects = new List<List<Vector2>>();
+            objects = new List<DrawObject>();
             objectColor = new List<int>();
             splines = new List<Spline>();
             //TODO
@@ -235,6 +245,12 @@ namespace MusicWall3D
             fireWork = ToDispose(GeometricPrimitive.Sphere.New(graphicsDevice));
             paletteCube = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
 
+            cylinder = InstancedGeometricPrimitive.CreateCylinder(graphicsDevice);
+            cylinder.IndexBuffer = ToDispose(cylinder.IndexBuffer);
+            cylinder.VertexBuffer = ToDispose(cylinder.VertexBuffer);
+
+            instancedGeo = ToDispose(new InstancedGeometricPrimitive(graphicsDevice));
+            
             timeLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
             guideLines = new List<GeometricPrimitive>();
             for (int i = 0; i < 9; i++)
@@ -283,9 +299,21 @@ namespace MusicWall3D
             basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
             basicEffect.FogEnabled = false;
+
+            instancedGeo.FogColor = (Vector3)Color.SeaGreen;
+            instancedGeo.FogStart = -100.0f;
+            instancedGeo.FogEnd = 100.0f;
+
             position = new Vector3();
 
-            primitive = ToDispose(GeometricPrimitive.Cylinder.New(graphicsDevice));
+            view = Matrix.LookAtLH(new Vector3(0.0f, 0.0f, -7.0f), new Vector3(0, 0.0f, 0), Vector3.UnitY);
+            projection = Matrix.PerspectiveFovLH(0.9f, (float)graphicsDevice.BackBuffer.Width / graphicsDevice.BackBuffer.Height, 0.1f, 100.0f);
+            Matrix projInv = Matrix.Invert(projection);
+            projInv.Transpose();
+
+            instancedGeo.ProjInv = projInv;
+
+            primitive = ToDispose(GeometricPrimitive.Cylinder.New(graphicsDevice,1f,1f,16));
 
         }
 
@@ -294,11 +322,15 @@ namespace MusicWall3D
             //TODO
             PlaySounds();            
 
-            view = Matrix.LookAtLH(new Vector3(0.0f, 0.0f, -7.0f), new Vector3(0, 0.0f, 0), Vector3.UnitY);
-            projection = Matrix.PerspectiveFovLH(0.9f, (float)graphicsDevice.BackBuffer.Width / graphicsDevice.BackBuffer.Height, 0.1f, 100.0f);
 
             basicEffect.View = view;
             basicEffect.Projection = projection;
+
+            instancedGeo.View = view;
+            instancedGeo.ViewProj = view * projection;
+
+            instancedGeo.LightColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+            instancedGeo.LightView = new Vector4(Vector3.TransformCoordinate(new Vector3(-1.0f, 1.0f, -1.0f), view), 1.0f);
 
             //keyboardState = keyboard.GetState();
             //mouseState = mouse.GetState();
@@ -345,14 +377,39 @@ namespace MusicWall3D
 
             if (mouseState.right)
             {
-
-                objects.Clear();
-                splines.Clear();
+                if (gameTime.TotalGameTime.TotalSeconds - lastRemoveEvent >= frequency && (new Vector2(mouseState.X,mouseState.Y)-lastPosition).Length() >= minDistance)
+                {
+                    lastPosition = new Vector2(mouseState.X, mouseState.Y);
+                    lastRemoveEvent = (float)gameTime.TotalGameTime.TotalSeconds;
                 objectColor.Clear();
                // currentColor.Clear();
                 sound.Clear();
 
-                currentPoints = new List<Vector2>();
+                    for(int i=0;i<objects.Count;i++)
+                    {
+                        if ((lastPosition - objects[i].Position).Length() < minDistance * 2.0f)
+                        {
+
+                            for (int j = 0; j < objects.Count; j++)
+                            {
+                                if (objects[j].InstanceId > objects[i].InstanceId)
+                                {
+                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1 };
+                                }
+                            }
+
+                            instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+                            objects.RemoveAt(i);
+                            i--;
+                        }
+                    }
+
+
+                }
+                //objects.Clear();
+                //splines.Clear();
+
+                //currentPoints = new List<Vector2>();
             }
            
             if (mouseState.X >= 0.69 && mouseState.X <= 0.725 && mouseState.left && 0.91f <= mouseState.Y && mouseState.Y <= 0.97f)
@@ -434,10 +491,25 @@ namespace MusicWall3D
 
                 if (currentSpline != null)
                 {
-                    objects.Add(currentPoints);
+
+                    foreach (var p in currentPoints)
+                    {
+                        InstancedGeometricPrimitive.InstanceType point;
+                        DrawObject o;
+
+                        computePointData(new Vector3(p,5.0f),out point.World);
+                        point.Color = (Vector4)pickColor(p.Y);
+
+                        o.InstanceId = instancedGeo.AddToRenderPass(cylinder, point);
+                        o.Position = p;
+
+                        objects.Add(o);
+                    }
+                    sound.addCurve(currentPoints);
+
+                    currentPoints.Clear();
                     objectColor.Add(paletteColor);
                     splines.Add(currentSpline);
-                    sound.addCurve(currentPoints);
                 }
      
             }
@@ -466,7 +538,7 @@ namespace MusicWall3D
             removeP.Clear();
 
             /**END PARTICLE UPDATE********************************************************************/
-
+            PlaySounds();
 
             
 
@@ -476,14 +548,14 @@ namespace MusicWall3D
         private void PlaySounds()
         {
             TimeSpan tmp = stopWatch.Elapsed;
-            for(int pc = 0; pc < objects.Count(); pc++)//foreach (List<Vector2> list in objects)
-            {
+
 
                 //**********PARTICLE TEST***//
-                foreach (Vector2 l in objects[pc])
+                foreach (var o in objects)
                 {
+                    Vector2 l = o.Position;
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL) <= particleFrequency + 0.0005)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
                     {
                         if (objects[pc].Count < 4)
                         {
@@ -501,23 +573,21 @@ namespace MusicWall3D
                         }
                     }
                 }
-            }
  
             if (lastUpdate.Seconds != tmp.Seconds)
             {
                 
                 lastUpdate = tmp;
                 float last, first;
-
-                foreach (List<Vector2> list in objects)
+                foreach (var o in objects)
                 {
-                    if (list.Count == 0) continue;
+                    Vector2 l = o.Position;
 
-                    first = list[0][0] - 0.05f;
-                    last = (list.Last()[0]) + 0.05f;
+                    first = l.X - 0.05f;
+                    last = (l.X) + 0.05f;
                     if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
                     {
-//                        sound.Play(list[0].Y);                      
+                        sound.Play(l.Y);                      
                     }
                     //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
                     //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
@@ -529,24 +599,25 @@ namespace MusicWall3D
 
         private void addParticles()
         {
-            TimeSpan tmp = stopWatch.Elapsed;
-            if (lastUpdate.Seconds != tmp.Seconds)
-            {                
-                lastUpdate = tmp;
-                float last, first;
-
-                foreach (List<Vector2> list in objects)
-                {
-                    first = list[0][0] - 0.05f;
-                    last = (list.Last()[0]) + 0.05f;
-                    if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
-                    {
-                        float x = list[0].X;
-                        float y = list[0].Y;
-                    }
-
-                }
-            }
+            //TimeSpan tmp = stopWatch.Elapsed;
+            //if (lastUpdate.Seconds != tmp.Seconds)
+            //{                
+            //    lastUpdate = tmp;
+            //    float last, first;
+            //    foreach (List<Vector2> list in objects)
+            //    {
+            //        first = list[0][0] - 0.05f;
+            //        last = (list.Last()[0]) + 0.05f;
+            //        if ((first * 10) < tmp.Seconds % 10 && (int)(last * 10) >= tmp.Seconds % 10)
+            //        {
+            //            float x = list[0].X;
+            //            float y = list[0].Y;
+            //        }
+            //        //Debug.WriteLine(first * 10 + "<" + tmp.Seconds % 10 + "=" + (first * 10 < tmp.Seconds % 10));
+            //        //Debug.WriteLine(last * 10 + ">" + tmp.Seconds % 10 + "=" + (last * 10 > tmp.Seconds % 10));
+            //        //Debug.WriteLine(0.5f);
+            //    }
+            //}
         }
 
 
@@ -565,21 +636,17 @@ namespace MusicWall3D
             
             Vector2 normalizedPos = normalizeVector2((Vector2)position);
 
-                    for (int j = 0; j < objects.Count; j++)
-                    {
-                        if (objects[j].Count == 0) continue;
 
+                for (int i = 0; i < objects.Count; i++)
+                {
 
-                        foreach (Vector2 p in objects[j])
+                        if (objects[i].Position.X < xTL - particleFrequency)
                         {
-                            if (p.X < xTL - particleFrequency)
-                            {
-                                drawPoint(new Vector3(p, 5.0f), new Color4(255, 255, 255, 255));
-                            }
-                            else
-                            {
-                                drawPoint(new Vector3(p, 5.0f), (Vector4)pickColor((float)p.Y, objectColor[j]));
-                            }
+                            instancedGeo.ModifyInstance(cylinder,objects[i].InstanceId,null,new Color4(255, 255, 255, 255));
+                        }
+                        else
+                        {
+                            instancedGeo.ModifyInstance(cylinder, objects[i].InstanceId, null, (Vector4)pickColor((float)objects[i].Position.Y));
                         }
 
 
@@ -668,6 +735,8 @@ namespace MusicWall3D
                         Matrix.Translation(screenToWorld(new Vector3(normalizedPos, 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.201f));
                     basicEffect.DiffuseColor = (Vector4)pickColor(normalizedPos.Y, paletteColor);
                     primitive.Draw(basicEffect);*/
+
+            instancedGeo.Draw();
             
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
@@ -880,6 +949,15 @@ namespace MusicWall3D
                                     Matrix.Translation(screenToWorld(pos, basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
             basicEffect.DiffuseColor = col;
             primitive.Draw(basicEffect);
+        }
+
+        private void computePointData(Vector3 pos, out Matrix world)
+        {
+            world = Matrix.Scaling(0.4f, 0.05f, 0.4f) *
+                                    Matrix.RotationX(deg2rad(90.0f)) *
+                                    Matrix.RotationY(0) *
+                                    Matrix.RotationZ(0) *
+                                    Matrix.Translation(screenToWorld(pos, view,projection, Matrix.Identity, graphicsDevice.Viewport));
         }
 
         private float deg2rad(float angle)

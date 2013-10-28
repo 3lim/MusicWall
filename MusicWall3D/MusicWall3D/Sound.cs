@@ -91,6 +91,8 @@ namespace MusicWall3D
 
             public void addCurve(List<Vector2> points)
             {
+                if (points.Count == 0) return;
+
                 int i = 0;
                 int freq = -1;
                 lastFreq = -1;

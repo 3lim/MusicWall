@@ -1,4 +1,4 @@
-﻿Texture2D<float4> Texture;
+Texture2D<float4> Texture;
 
 SamplerState PointSampler;
 float BrightPassThreshold;
