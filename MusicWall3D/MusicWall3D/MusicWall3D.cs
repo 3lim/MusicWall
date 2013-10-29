@@ -90,14 +90,14 @@ namespace MusicWall3D
         private int paletteColor = 3; //which color to draw with
 
         // GRADIENT BACKGROUND
-        private List<GeometricPrimitive> backgroundElts;
+        private GeometricPrimitive backgroundElt;
          // bottom color: RGB (/100) = (32, 30, 38)
          // top color: RGB (/100) = (62, 85, 84)
         private float[] bckgdTopColor = new float[] { 0.62f, 0.85f, 0.84f };
         private float[] gradientBckgdColor = new float[] { 0.30f, 0.55f, 0.46f };
 
         private GeometricPrimitive timeLine;
-        private List<GeometricPrimitive> guideLines;
+        private GeometricPrimitive guideLine;
 
         //private Kinect kinect = new Kinect();
         private const float kinectUpdateFrequency = 0.5f;
@@ -255,18 +255,8 @@ namespace MusicWall3D
             instancedGeo = ToDispose(new InstancedGeometricPrimitive(graphicsDevice));
             
             timeLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
-            guideLines = new List<GeometricPrimitive>();
-            for (int i = 0; i < 9; i++)
-            {
-                guideLines.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
-            }
-
-            // gradient background
-            backgroundElts = new List<GeometricPrimitive>();
-            for (int i = 0; i < 55; i++)
-            {
-                backgroundElts.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
-            }
+            guideLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
+            backgroundElt = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
 
             //Palette colours
             palette[0] = green;
@@ -785,20 +775,7 @@ namespace MusicWall3D
             // ------- END TIME LINE -------------
 
             // ----- GUIDE LINES ------------------
-            float glY = 0.0f;
-            foreach(GeometricPrimitive gl in guideLines)
-            {
-                glY += 0.1f;
-                basicEffect.World = Matrix.Scaling(graphicsDevice.BackBuffer.Width, 0.0f, 0.022f) *
-                    Matrix.RotationX(deg2rad(90.0f)) *
-                    Matrix.RotationY(0) *
-                    Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
-                                                    + new Vector3(0, 0, 0.1f));
-                
-                basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
-                gl.Draw(basicEffect);
-            }
+            drawGuideLines(8);
             // ----- END GUIDE LINES --------------
            
             
@@ -846,7 +823,7 @@ namespace MusicWall3D
 
 
             // -------- GRADIENT BACKGROUND ----------------
-            glY = -0.02f;
+            float eltY = -0.02f;
       /*      float redY = bckgdTopColor[0];
             float greenY = bckgdTopColor[1];
             float blueY = bckgdTopColor[2];
@@ -859,9 +836,9 @@ namespace MusicWall3D
             float blueY = 1.0f;
         
             basicEffect.LightingEnabled = false;
-            foreach (GeometricPrimitive elt in backgroundElts)
+            for (int i=0; i<55; i++)
             {
-                glY += 0.02f;
+                eltY += 0.02f;
                 redY -= 0.020f;
                 greenY -= 0.020f;//22
                 blueY -= 0.020f;//18
@@ -872,11 +849,11 @@ namespace MusicWall3D
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, eltY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
                                                     + new Vector3(0, 0, 0.2f));
 
                 basicEffect.DiffuseColor = new Color4(redY, greenY, blueY, 0.0f);
-                elt.Draw(basicEffect);
+                backgroundElt.Draw(basicEffect);
             }
             basicEffect.LightingEnabled = true;
             // --------- END GRADIENT BACKGROUND -----------
@@ -948,6 +925,29 @@ namespace MusicWall3D
                                     Matrix.Translation(screenToWorld(pos, basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
             basicEffect.DiffuseColor = col;
             primitive.Draw(basicEffect);
+        }
+
+        private void drawGuideLines(int number)
+        {
+            if (number < 3) { number = 3; }
+
+            float y = 0.0f;
+            float deltaY = (float)1 / (number - 1);
+
+            for(int i=0; i<number; i++)
+            {
+                basicEffect.World = Matrix.Scaling(graphicsDevice.BackBuffer.Width, 0.0f, 0.022f) *
+                    Matrix.RotationX(deg2rad(90.0f)) *
+                    Matrix.RotationY(0) *
+                    Matrix.RotationZ(0) *
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, y, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                                                    + new Vector3(0, 0, 0.001f));
+
+                basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
+                guideLine.Draw(basicEffect);
+
+                y += deltaY;
+            }
         }
 
         private void computePointData(Vector3 pos, out Matrix world)
