@@ -64,6 +64,7 @@ namespace MusicWall3D
         private Spline currentSpline;
         private List<Vector2> currentPoints = new List<Vector2>();
         private bool drawingStarted = false;
+        private bool undoStarted = false;
         private float lastEvent = 0.0f;
         private const float frequency = 0.005f;
         private const float pointFrequency = 0.005f;
@@ -377,41 +378,58 @@ namespace MusicWall3D
 
             // KINECT END
 
-            if (mouseState.right)
+            if (mouseState.right) //Undo the last curve.
             {
-                if (gameTime.TotalGameTime.TotalSeconds - lastRemoveEvent >= frequency && (new Vector2(mouseState.X,mouseState.Y)-lastPosition).Length() >= minDistance)
-                {
-                    lastPosition = new Vector2(mouseState.X, mouseState.Y);
-                    lastRemoveEvent = (float)gameTime.TotalGameTime.TotalSeconds;
-                objectColor.Clear();
-               // currentColor.Clear();
-                sound.Clear();
-
-                    for(int i=0;i<objects.Count;i++)
-                    {
-                        if ((lastPosition - objects[i].Position).Length() < minDistance * 2.0f)
-                        {
-
-                            for (int j = 0; j < objects.Count; j++)
-                            {
-                                if (objects[j].InstanceId > objects[i].InstanceId)
+                /*                if (gameTime.TotalGameTime.TotalSeconds - lastRemoveEvent >= frequency && (new Vector2(mouseState.X,mouseState.Y)-lastPosition).Length() >= minDistance)
                                 {
-                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1, ObjectColor=objects[j].ObjectColor,SplineId = objects[j].SplineId };
+                                    lastPosition = new Vector2(mouseState.X, mouseState.Y);
+                                    lastRemoveEvent = (float)gameTime.TotalGameTime.TotalSeconds;
+                                objectColor.Clear();
+                               // currentColor.Clear();
+                                sound.Clear();
+
+                                    for(int i=0;i<objects.Count;i++)
+                                    {
+                                        if ((lastPosition - objects[i].Position).Length() < minDistance * 2.0f)
+                                        {
+
+                                            for (int j = 0; j < objects.Count; j++)
+                                            {
+                                                if (objects[j].InstanceId > objects[i].InstanceId)
+                                                {
+                                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1, ObjectColor=objects[j].ObjectColor,SplineId = objects[j].SplineId };
+                                                }
+                                            }
+
+                                            instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+                                            objects.RemoveAt(i);
+                                            i--;
+                                        }
+                                    }
+
+
                                 }
-                            }
+                                //objects.Clear();
+                                //splines.Clear();
 
-                            instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
-                            objects.RemoveAt(i);
-                            i--;
-                        }
+                                //currentPoints = new List<Vector2>();*/
+                if (!undoStarted)
+                {
+                    sound.Undo();
+                    undoStarted = true;
+                    int splineId = objects[objects.Count - 1].SplineId;
+                    for (int i = objects.Count - 1; i >= 0; i--)
+                    {
+                        if (objects[i].SplineId != splineId)
+                            break;
+                        instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+                        objects.RemoveAt(i);
                     }
-
-
                 }
-                //objects.Clear();
-                //splines.Clear();
-
-                //currentPoints = new List<Vector2>();
+            }
+            else //if mouseState.right
+            {
+                undoStarted = false;
             }
            
             if (mouseState.X >= 0.69 && mouseState.X <= 0.725 && mouseState.left && 0.91f <= mouseState.Y && mouseState.Y <= 0.97f)
