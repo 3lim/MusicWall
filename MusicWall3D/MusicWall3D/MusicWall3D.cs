@@ -410,13 +410,16 @@ namespace MusicWall3D
                 {
                     sound.Undo();
                     undoStarted = true;
-                    int splineId = objects[objects.Count - 1].SplineId;
-                    for (int i = objects.Count - 1; i >= 0; i--)
+                    if (objects.Count > 0)
                     {
-                        if (objects[i].SplineId != splineId)
-                            break;
-                        instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
-                        objects.RemoveAt(i);
+                        int splineId = objects[objects.Count - 1].SplineId;
+                        for (int i = objects.Count - 1; i >= 0; i--)
+                        {
+                            if (objects[i].SplineId != splineId)
+                                break;
+                            instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+                            objects.RemoveAt(i);
+                        }
                     }
                 }
             }
@@ -520,7 +523,7 @@ namespace MusicWall3D
 
                         objects.Add(o);
                     }
-                    sound.addCurve(currentPoints);
+                    sound.addCurve(currentPoints, paletteColor);
 
                     currentPoints.Clear();
                     objectColor.Add(paletteColor);
@@ -589,7 +592,7 @@ namespace MusicWall3D
                     }
                 }
  
-            if (lastUpdate.Seconds != tmp.Seconds)
+/*            if (lastUpdate.Seconds != tmp.Seconds)
             {
                 
                 lastUpdate = tmp;
@@ -609,7 +612,7 @@ namespace MusicWall3D
                     //Debug.WriteLine(0.5f);
 
                 }
-            }
+            }*/
         } 
 
 
@@ -782,7 +785,7 @@ namespace MusicWall3D
             // ------- END TIME LINE -------------
 
             // ----- GUIDE LINES ------------------
-            drawGuideLines(8);
+            drawGuideLines(15);
             // ----- END GUIDE LINES --------------
            
             
