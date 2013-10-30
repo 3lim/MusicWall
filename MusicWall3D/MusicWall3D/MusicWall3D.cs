@@ -79,10 +79,11 @@ namespace MusicWall3D
         private GeometricPrimitive paletteCube;
 
         private InstancedGeometricPrimitive.Primitive cylinder;
-        private InstancedGeometricPrimitive instancedGeo;        private Color[] green = new Color[] { Color.MediumSpringGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
-        private Color[] pink = new Color[] {Color.Magenta};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
-        private Color[] lilac = new Color[] {Color.Fuchsia};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
-        private Color[] purple = new Color[] {Color.Blue};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
+        private InstancedGeometricPrimitive instancedGeo;        
+        private Color[] green = new Color[] {new Color(0.165f, 1.8f, 0.502f)};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
+        private Color[] pink = new Color[] { new Color(1.0f, 0.0f, 1.0f) };//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
+        private Color[] lilac = new Color[] {new Color(0.4f, 0.0f, 0.6f)};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
+        private Color[] purple = new Color[] {new Color(0.1f, 0.0f, 3.0f)};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
         private Color[][] palette = new Color[4][];
 
         private Color4[] palette2 = new Color4[4];
@@ -266,8 +267,8 @@ namespace MusicWall3D
 
             palette2[0] = new Color4(0.165f, 1.8f, 0.502f, 1.0f);
             palette2[1] = new Color4(1.0f, 0.0f, 1.0f, 1.0f);
-            palette2[2] = new Color4(1.6f, 0.0f, 1.9f, 1.0f);
-            palette2[3] = new Color4(0.1f, 0.0f, 2.0f, 1.0f);
+            palette2[2] = new Color4(0.4f, 0.0f, 0.6f, 1.0f);
+            palette2[3] = new Color4(0.1f, 0.0f, 3.0f, 1.0f);
             
 
 
@@ -288,12 +289,14 @@ namespace MusicWall3D
             basicEffect.PreferPerPixelLighting = true;
             basicEffect.EnableDefaultLighting();
 
-            basicEffect.FogColor = (Vector3)Color.Pink;
+           // basicEffect.FogColor = (Vector3)Color.Pink;
             basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
             basicEffect.FogEnabled = false;
+            
 
-            instancedGeo.FogColor = (Vector3)Color.SeaGreen;
+
+           // instancedGeo.FogColor = (Vector3)Color.SeaGreen;
             instancedGeo.FogStart = -100.0f;
             instancedGeo.FogEnd = 100.0f;
 
@@ -567,7 +570,7 @@ namespace MusicWall3D
                 {
                     Vector2 l = o.Position;
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL) <= pointFrequency)
+                    if (Math.Abs(l.X - xTL) <= pointFrequency/5)
                     {
                         if (splines[o.SplineId].pointList.Count < 2)
                         {
@@ -734,7 +737,7 @@ namespace MusicWall3D
                 {
                     for (int k = 0; k < 10; k++)
                     {
-                        basicEffect.World = Matrix.Scaling((0.1f - k*0.01f), (0.1f - k*0.01f), (0.1f - k*0.01f)) *
+                        basicEffect.World = Matrix.Scaling((0.08f - k*0.01f), (0.08f - k*0.01f), (0.08f - k*0.01f)) *
                             Matrix.RotationX(p.getRotationX()) *
                             Matrix.RotationY(p.getRotationY()) *
                             Matrix.RotationZ(p.getRotationZ()) *
@@ -742,12 +745,14 @@ namespace MusicWall3D
 
                         // Color4 color = p.getColor();
                         basicEffect.DiffuseColor = p.getColor(); //color;
+                      //  basicEffect.Alpha = p.lifespan;
                         fireWork.Draw(basicEffect);
+                        basicEffect.Alpha = 1.0f;
                     }
                 }
                 else
                 {
-                    basicEffect.World = Matrix.Scaling(0.1f, 0.1f, 0.1f) *
+                    basicEffect.World = Matrix.Scaling(0.08f, 0.08f, 0.08f) *
                         Matrix.RotationX(p.getRotationX()) *
                         Matrix.RotationY(p.getRotationY()) *
                         Matrix.RotationZ(p.getRotationZ()) *
@@ -755,7 +760,9 @@ namespace MusicWall3D
 
                     // Color4 color = p.getColor();
                     basicEffect.DiffuseColor = p.getColor(); //color;
+                    //basicEffect.Alpha = p.lifespan / 400;
                     g.Draw(basicEffect);
+                    basicEffect.Alpha = 1.0f;
                 }
             }
 
@@ -794,18 +801,8 @@ namespace MusicWall3D
 
                     basicEffect.DiffuseColor = new Color4(255,255,255,255);
                     paletteCube.Draw(basicEffect);
-
-                   /* basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
-                        Matrix.RotationX(deg2rad(90.0f)) *
-                        Matrix.RotationY(0) *
-                        Matrix.RotationZ(0) *
-                        Matrix.Translation(screenToWorld(new Vector3(xPs, 0.93f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.2f));
-
-                    basicEffect.DiffuseColor = palette2[i];
-                    paletteCube.Draw(basicEffect);*/
                 }
-               // else
-                //{
+
                     basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
                         Matrix.RotationX(deg2rad(90.0f)) *
                         Matrix.RotationY(0) *
@@ -814,7 +811,7 @@ namespace MusicWall3D
 
                     basicEffect.DiffuseColor = palette2[i];
                     paletteCube.Draw(basicEffect);
-                //}
+          
                 xPs = xPs + 0.08f;
             }
 
@@ -918,7 +915,7 @@ namespace MusicWall3D
 
         private void drawPoint(Vector3 pos, Vector4 col)
         {
-            basicEffect.World = Matrix.Scaling(0.4f, 0.05f, 0.4f) *
+            basicEffect.World = Matrix.Scaling(0.3f, 0.02f, 0.3f) *
                                     Matrix.RotationX(deg2rad(90.0f)) *
                                     Matrix.RotationY(0) *
                                     Matrix.RotationZ(0) *
@@ -952,7 +949,7 @@ namespace MusicWall3D
 
         private void computePointData(Vector3 pos, out Matrix world)
         {
-            world = Matrix.Scaling(0.4f, 0.05f, 0.4f) *
+            world = Matrix.Scaling(0.3f, 0.02f, 0.3f) *
                                     Matrix.RotationX(deg2rad(90.0f)) *
                                     Matrix.RotationY(0) *
                                     Matrix.RotationZ(0) *

@@ -39,31 +39,31 @@ namespace ParticleLibrary
         {
             if (c == 0)
             {
-                color.Red =  ran.NextFloat(0.2f, 0.6f);
-                color.Green =  ran.NextFloat(0.4f, 1.4f);
+                color.Red = ran.NextFloat(0.2f, 0.6f);
+                color.Green = ran.NextFloat(0.4f, 1.4f);
                 color.Blue = ran.NextFloat(0.2f, 0.6f);
                 color.Alpha = 1.0f;
 
             }
             else if (c == 1)
             {
-                color.Red =  ran.NextFloat(0.2f, 1.6f);
+                color.Red = ran.NextFloat(0.6f, 1.6f);
                 color.Green = ran.NextFloat(0.0f, 0.2f);
-                color.Blue = ran.NextFloat(0.4f, 1.0f);
+                color.Blue = ran.NextFloat(0.4f, 0.8f);
                 color.Alpha = 1.0f;
             }
             else if (c == 2)
             {
-                color.Red = ran.NextFloat(0.7f, 1.3f);
-                color.Green = ran.NextFloat(0.0f, 0.2f);
-                color.Blue = ran.NextFloat(0.6f, 1.8f);
+                color.Red = ran.NextFloat(0.2f, 0.5f);
+                color.Green = 0.0f;//ran.NextFloat(0.0f, 0.0f);
+                color.Blue = ran.NextFloat(0.2f, 0.8f);
                 color.Alpha = 1.0f;
             }
             else if (c == 3)
             {
-                color.Red = ran.NextFloat(0.2f, 0.6f);
+                color.Red = ran.NextFloat(0.0f, 0.2f);
                 color.Green = ran.NextFloat(0.0f, 0.2f);
-                color.Blue = ran.NextFloat(0.4f, 1.4f);
+                color.Blue = ran.NextFloat(0.4f, 1.0f);
                 color.Alpha = 1.0f;
             }
 
