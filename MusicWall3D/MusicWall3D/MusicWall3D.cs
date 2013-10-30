@@ -567,11 +567,11 @@ namespace MusicWall3D
                 {
                     Vector2 l = o.Position;
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    if (Math.Abs(l.X - xTL) <= pointFrequency)
                     {
-                        if (splines[o.SplineId].pointList.Count < 4)
+                        if (splines[o.SplineId].pointList.Count < 2)
                         {
-                            for (int j = 0; j < 30; j++)
+                            for (int j = 0; j < 10; j++)
                             {
                                 pSystem.addParticle(l.X, l.Y, 4, o.ObjectColor);
                             }

@@ -32,7 +32,7 @@ namespace ParticleLibrary
             else
             {
 
-                pSystem.Add(new Fireworks(x, y, 400, i, type, cType));
+                pSystem.Add(new Fireworks(x, y, 1400, i, type, cType));
 
             }
         }
