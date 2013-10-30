@@ -7,6 +7,8 @@
 /ParticleSystem/ParticleSystem/obj
 /ParticleSystem/ParticleLibrary/obj
 /ParticleSystem/ParticleLibrary/bin
+/KinectLibrary/KinectLibrary/obj
+/KinectLibrary/KinectLibrary/bin
 *.suo
 *.userprefs
 /bin

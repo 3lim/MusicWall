@@ -64,6 +64,7 @@ namespace MusicWall3D
         private Spline currentSpline;
         private List<Vector2> currentPoints = new List<Vector2>();
         private bool drawingStarted = false;
+        private bool undoStarted = false;
         private float lastEvent = 0.0f;
         private const float frequency = 0.005f;
         private const float pointFrequency = 0.003f;
@@ -78,10 +79,11 @@ namespace MusicWall3D
         private GeometricPrimitive paletteCube;
 
         private InstancedGeometricPrimitive.Primitive cylinder;
-        private InstancedGeometricPrimitive instancedGeo;        private Color[] green = new Color[] { Color.MediumSpringGreen};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
-        private Color[] pink = new Color[] {Color.Magenta};//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
-        private Color[] lilac = new Color[] {Color.Fuchsia};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
-        private Color[] purple = new Color[] {Color.Blue};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
+        private InstancedGeometricPrimitive instancedGeo;        
+        private Color[] green = new Color[] {new Color(0.165f, 1.8f, 0.502f)};//, Color.GhostWhite, Color.FloralWhite };//new Color4(1.0f, 1.0f, 1.0f, 1.0f); //1
+        private Color[] pink = new Color[] { new Color(1.0f, 0.0f, 1.0f) };//, Color.Blue, Color.Navy};//new Color4(0.165f, 0.875f, 0.902f, 1.0f);//2
+        private Color[] lilac = new Color[] {new Color(0.4f, 0.0f, 0.6f)};//, Color.HotPink, Color.HotPink};//new Color4(0.914f, 0.392f, 0.475f, 1.0f);//3
+        private Color[] purple = new Color[] {new Color(0.1f, 0.0f, 3.0f)};//, Color.Purple, Color.Black};//new Color4(0.49f, 0.392f, 0.851f, 1.0f); //0
         private Color[][] palette = new Color[4][];
 
         private Color4[] palette2 = new Color4[4];
@@ -89,14 +91,14 @@ namespace MusicWall3D
         private int paletteColor = 3; //which color to draw with
 
         // GRADIENT BACKGROUND
-        private List<GeometricPrimitive> backgroundElts;
+        private GeometricPrimitive backgroundElt;
          // bottom color: RGB (/100) = (32, 30, 38)
          // top color: RGB (/100) = (62, 85, 84)
         private float[] bckgdTopColor = new float[] { 0.62f, 0.85f, 0.84f };
         private float[] gradientBckgdColor = new float[] { 0.30f, 0.55f, 0.46f };
 
         private GeometricPrimitive timeLine;
-        private List<GeometricPrimitive> guideLines;
+        private GeometricPrimitive guideLine;
 
         //private Kinect kinect = new Kinect();
         private const float kinectUpdateFrequency = 0.5f;
@@ -254,18 +256,8 @@ namespace MusicWall3D
             instancedGeo = ToDispose(new InstancedGeometricPrimitive(graphicsDevice));
             
             timeLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
-            guideLines = new List<GeometricPrimitive>();
-            for (int i = 0; i < 9; i++)
-            {
-                guideLines.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
-            }
-
-            // gradient background
-            backgroundElts = new List<GeometricPrimitive>();
-            for (int i = 0; i < 55; i++)
-            {
-                backgroundElts.Add(ToDispose(GeometricPrimitive.Cube.New(graphicsDevice)));
-            }
+            guideLine = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
+            backgroundElt = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
 
             //Palette colours
             palette[0] = green;
@@ -275,8 +267,8 @@ namespace MusicWall3D
 
             palette2[0] = new Color4(0.165f, 1.8f, 0.502f, 1.0f);
             palette2[1] = new Color4(1.0f, 0.0f, 1.0f, 1.0f);
-            palette2[2] = new Color4(1.6f, 0.0f, 1.9f, 1.0f);
-            palette2[3] = new Color4(0.1f, 0.0f, 2.0f, 1.0f);
+            palette2[2] = new Color4(0.4f, 0.0f, 0.6f, 1.0f);
+            palette2[3] = new Color4(0.1f, 0.0f, 3.0f, 1.0f);
             
 
 
@@ -297,12 +289,14 @@ namespace MusicWall3D
             basicEffect.PreferPerPixelLighting = true;
             basicEffect.EnableDefaultLighting();
 
-            basicEffect.FogColor = (Vector3)Color.Pink;
+           // basicEffect.FogColor = (Vector3)Color.Pink;
             basicEffect.FogStart = -100.0f;
             basicEffect.FogEnd = 100.0f;
             basicEffect.FogEnabled = false;
+            
 
-            instancedGeo.FogColor = (Vector3)Color.SeaGreen;
+
+           // instancedGeo.FogColor = (Vector3)Color.SeaGreen;
             instancedGeo.FogStart = -100.0f;
             instancedGeo.FogEnd = 100.0f;
 
@@ -377,41 +371,61 @@ namespace MusicWall3D
 
             // KINECT END
 
-            if (mouseState.right)
+            if (mouseState.right) //Undo the last curve.
             {
-                if (gameTime.TotalGameTime.TotalSeconds - lastRemoveEvent >= frequency && (new Vector2(mouseState.X,mouseState.Y)-lastPosition).Length() >= minDistance)
-                {
-                    lastPosition = new Vector2(mouseState.X, mouseState.Y);
-                    lastRemoveEvent = (float)gameTime.TotalGameTime.TotalSeconds;
-                objectColor.Clear();
-               // currentColor.Clear();
-                sound.Clear();
-
-                    for(int i=0;i<objects.Count;i++)
-                    {
-                        if ((lastPosition - objects[i].Position).Length() < minDistance * 2.0f)
-                        {
-
-                            for (int j = 0; j < objects.Count; j++)
-                            {
-                                if (objects[j].InstanceId > objects[i].InstanceId)
+                /*                if (gameTime.TotalGameTime.TotalSeconds - lastRemoveEvent >= frequency && (new Vector2(mouseState.X,mouseState.Y)-lastPosition).Length() >= minDistance)
                                 {
-                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1, ObjectColor=objects[j].ObjectColor,SplineId = objects[j].SplineId };
-                                }
-                            }
+                                    lastPosition = new Vector2(mouseState.X, mouseState.Y);
+                                    lastRemoveEvent = (float)gameTime.TotalGameTime.TotalSeconds;
+                                objectColor.Clear();
+                               // currentColor.Clear();
+                                sound.Clear();
 
+                                    for(int i=0;i<objects.Count;i++)
+                                    {
+                                        if ((lastPosition - objects[i].Position).Length() < minDistance * 2.0f)
+                                        {
+
+                                            for (int j = 0; j < objects.Count; j++)
+                                            {
+                                                if (objects[j].InstanceId > objects[i].InstanceId)
+                                                {
+                                                    objects[j] = new DrawObject() { Position = objects[j].Position, InstanceId = objects[j].InstanceId - 1, ObjectColor=objects[j].ObjectColor,SplineId = objects[j].SplineId };
+                                                }
+                                            }
+
+                                            instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+                                            objects.RemoveAt(i);
+                                            i--;
+                                        }
+                                    }
+
+
+                                }
+                                //objects.Clear();
+                                //splines.Clear();
+
+                                //currentPoints = new List<Vector2>();*/
+                if (!undoStarted)
+                {
+                    sound.Undo();
+                    undoStarted = true;
+                    if (objects.Count > 0)
+                    {
+                        int splineId = objects[objects.Count - 1].SplineId;
+                        for (int i = objects.Count - 1; i >= 0; i--)
+                        {
+                            if (objects[i].SplineId != splineId)
+                                break;
                             instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
                             objects.RemoveAt(i);
-                            i--;
                         }
                     }
-
-
                 }
-                //objects.Clear();
-                //splines.Clear();
-
-                //currentPoints = new List<Vector2>();
+            }
+            else //if mouseState.right
+            {
+                undoStarted = false;
             }
            
             if (mouseState.X >= 0.69 && mouseState.X <= 0.725 && mouseState.left && 0.91f <= mouseState.Y && mouseState.Y <= 0.97f)
@@ -509,8 +523,7 @@ namespace MusicWall3D
 
                         objects.Add(o);
                     }
-
-                    sound.addCurve(currentPoints);
+                    sound.addCurve(currentPoints, paletteColor);
 
                     currentPoints.Clear();
                     objectColor.Add(paletteColor);
@@ -560,16 +573,16 @@ namespace MusicWall3D
                 {
                     Vector2 l = o.Position;
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL) <= particleFrequency)//(l.X * 10 < tmp.Seconds % 10 && (int)(list.Last()[0] * 10) >= tmp.Seconds % 10)
+                    if (Math.Abs(l.X - xTL) <= pointFrequency)
                     {
-                        if (splines[o.SplineId].pointList.Count < 4)
+                        if (splines[o.SplineId].pointList.Count < 2)
                         {
-                            for (int j = 0; j < 30; j++)
+                            for (int j = 0; j < 2; j++)
                             {
                                 pSystem.addParticle(l.X, l.Y, 4, o.ObjectColor);
                             }
                         }
-                        else
+                        else if (Math.Abs(l.X - xTL) <= pointFrequency/10)
                         {
                             for (int j = 0; j < 1; j++)
                             {
@@ -579,7 +592,7 @@ namespace MusicWall3D
                     }
                 }
  
-            if (lastUpdate.Seconds != tmp.Seconds)
+/*            if (lastUpdate.Seconds != tmp.Seconds)
             {
                 
                 lastUpdate = tmp;
@@ -599,7 +612,7 @@ namespace MusicWall3D
                     //Debug.WriteLine(0.5f);
 
                 }
-            }
+            }*/
         } 
 
 
@@ -727,7 +740,7 @@ namespace MusicWall3D
                 {
                     for (int k = 0; k < 10; k++)
                     {
-                        basicEffect.World = Matrix.Scaling((0.1f - k*0.01f), (0.1f - k*0.01f), (0.1f - k*0.01f)) *
+                        basicEffect.World = Matrix.Scaling((0.08f - k*0.01f), (0.08f - k*0.01f), (0.08f - k*0.01f)) *
                             Matrix.RotationX(p.getRotationX()) *
                             Matrix.RotationY(p.getRotationY()) *
                             Matrix.RotationZ(p.getRotationZ()) *
@@ -735,12 +748,14 @@ namespace MusicWall3D
 
                         // Color4 color = p.getColor();
                         basicEffect.DiffuseColor = p.getColor(); //color;
+                      //  basicEffect.Alpha = p.lifespan;
                         fireWork.Draw(basicEffect);
+                        basicEffect.Alpha = 1.0f;
                     }
                 }
                 else
                 {
-                    basicEffect.World = Matrix.Scaling(0.1f, 0.1f, 0.1f) *
+                    basicEffect.World = Matrix.Scaling(0.08f, 0.08f, 0.08f) *
                         Matrix.RotationX(p.getRotationX()) *
                         Matrix.RotationY(p.getRotationY()) *
                         Matrix.RotationZ(p.getRotationZ()) *
@@ -748,7 +763,9 @@ namespace MusicWall3D
 
                     // Color4 color = p.getColor();
                     basicEffect.DiffuseColor = p.getColor(); //color;
+                    //basicEffect.Alpha = p.lifespan / 400;
                     g.Draw(basicEffect);
+                    basicEffect.Alpha = 1.0f;
                 }
             }
 
@@ -768,20 +785,7 @@ namespace MusicWall3D
             // ------- END TIME LINE -------------
 
             // ----- GUIDE LINES ------------------
-            float glY = 0.0f;
-            foreach(GeometricPrimitive gl in guideLines)
-            {
-                glY += 0.1f;
-                basicEffect.World = Matrix.Scaling(graphicsDevice.BackBuffer.Width, 0.0f, 0.022f) *
-                    Matrix.RotationX(deg2rad(90.0f)) *
-                    Matrix.RotationY(0) *
-                    Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
-                                                    + new Vector3(0, 0, 0.1f));
-                
-                basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
-                gl.Draw(basicEffect);
-            }
+            drawGuideLines(15);
             // ----- END GUIDE LINES --------------
            
             
@@ -800,18 +804,8 @@ namespace MusicWall3D
 
                     basicEffect.DiffuseColor = new Color4(255,255,255,255);
                     paletteCube.Draw(basicEffect);
-
-                   /* basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
-                        Matrix.RotationX(deg2rad(90.0f)) *
-                        Matrix.RotationY(0) *
-                        Matrix.RotationZ(0) *
-                        Matrix.Translation(screenToWorld(new Vector3(xPs, 0.93f, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport) + new Vector3(0, 0, -0.2f));
-
-                    basicEffect.DiffuseColor = palette2[i];
-                    paletteCube.Draw(basicEffect);*/
                 }
-               // else
-                //{
+
                     basicEffect.World = Matrix.Scaling(0.6f, 0.001f, 0.6f) *
                         Matrix.RotationX(deg2rad(90.0f)) *
                         Matrix.RotationY(0) *
@@ -820,7 +814,7 @@ namespace MusicWall3D
 
                     basicEffect.DiffuseColor = palette2[i];
                     paletteCube.Draw(basicEffect);
-                //}
+          
                 xPs = xPs + 0.08f;
             }
 
@@ -829,7 +823,7 @@ namespace MusicWall3D
 
 
             // -------- GRADIENT BACKGROUND ----------------
-            glY = -0.02f;
+            float eltY = -0.02f;
       /*      float redY = bckgdTopColor[0];
             float greenY = bckgdTopColor[1];
             float blueY = bckgdTopColor[2];
@@ -842,9 +836,9 @@ namespace MusicWall3D
             float blueY = 1.0f;
         
             basicEffect.LightingEnabled = false;
-            foreach (GeometricPrimitive elt in backgroundElts)
+            for (int i=0; i<55; i++)
             {
-                glY += 0.02f;
+                eltY += 0.02f;
                 redY -= 0.020f;
                 greenY -= 0.020f;//22
                 blueY -= 0.020f;//18
@@ -855,11 +849,11 @@ namespace MusicWall3D
                     Matrix.RotationX(deg2rad(90.0f)) *
                     Matrix.RotationY(0) *
                     Matrix.RotationZ(0) *
-                    Matrix.Translation(screenToWorld(new Vector3(0.0f, glY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, eltY, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
                                                     + new Vector3(0, 0, 0.2f));
 
                 basicEffect.DiffuseColor = new Color4(redY, greenY, blueY, 0.0f);
-                elt.Draw(basicEffect);
+                backgroundElt.Draw(basicEffect);
             }
             basicEffect.LightingEnabled = true;
             // --------- END GRADIENT BACKGROUND -----------
@@ -924,7 +918,7 @@ namespace MusicWall3D
 
         private void drawPoint(Vector3 pos, Vector4 col)
         {
-            basicEffect.World = Matrix.Scaling(0.4f, 0.05f, 0.4f) *
+            basicEffect.World = Matrix.Scaling(0.3f, 0.02f, 0.3f) *
                                     Matrix.RotationX(deg2rad(90.0f)) *
                                     Matrix.RotationY(0) *
                                     Matrix.RotationZ(0) *
@@ -933,9 +927,32 @@ namespace MusicWall3D
             primitive.Draw(basicEffect);
         }
 
+        private void drawGuideLines(int number)
+        {
+            if (number < 3) { number = 3; }
+
+            float y = 0.0f;
+            float deltaY = (float)1 / (number - 1);
+
+            for(int i=0; i<number; i++)
+            {
+                basicEffect.World = Matrix.Scaling(graphicsDevice.BackBuffer.Width, 0.0f, 0.022f) *
+                    Matrix.RotationX(deg2rad(90.0f)) *
+                    Matrix.RotationY(0) *
+                    Matrix.RotationZ(0) *
+                    Matrix.Translation(screenToWorld(new Vector3(0.0f, y, 0.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                                                    + new Vector3(0, 0, 0.001f));
+
+                basicEffect.DiffuseColor = new Color4(0.2f, 0.2f, 0.2f, 0.2f);
+                guideLine.Draw(basicEffect);
+
+                y += deltaY;
+            }
+        }
+
         private void computePointData(Vector3 pos, out Matrix world)
         {
-            world = Matrix.Scaling(0.4f, 0.05f, 0.4f) *
+            world = Matrix.Scaling(0.3f, 0.02f, 0.3f) *
                                     Matrix.RotationX(deg2rad(90.0f)) *
                                     Matrix.RotationY(0) *
                                     Matrix.RotationZ(0) *

@@ -40,10 +40,10 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="SharpDX.Direct3D11.Effects">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\SharpDX\Bin\DirectX11-net40\SharpDX.Direct3D11.Effects.dll</HintPath>
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11_1-net40\SharpDX.Direct3D11.Effects.dll</HintPath>
     </Reference>
-	<Reference Include="SharpDX.DirectSound">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\SharpDX\Bin\DirectX11-net20\SharpDX.DirectSound.dll</HintPath>
+    <Reference Include="SharpDX.DirectSound">
+      <HintPath>E:\Program Files (x86)\Bin\DirectX11-net20\SharpDX.DirectSound.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -92,7 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\BasicEffect.fx" />
-    <Folder Include="Resources\" />
     <None Include="Resources\MeshRenderer.fx" />
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
