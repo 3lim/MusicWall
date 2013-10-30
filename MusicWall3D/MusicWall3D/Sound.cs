@@ -134,7 +134,7 @@ namespace MusicWall3D
                     var tmpSound = new short[sounds.Length];
 
                     //Debug.WriteLine(points.Count);
-                    if (points.Count == 1)
+                    if (points.Count < 7)
                     {
                         Note(points[0]);
                     }
@@ -202,7 +202,7 @@ namespace MusicWall3D
             var tmpSound = new short[sounds.Length];
 
             //Debug.WriteLine(points.Count);
-            if (points.Count == 1)
+            if (points.Count < 7)
             {
                 squareNote(points[0]);
             }
