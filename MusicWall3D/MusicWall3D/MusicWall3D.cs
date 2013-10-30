@@ -66,7 +66,7 @@ namespace MusicWall3D
         private bool drawingStarted = false;
         private float lastEvent = 0.0f;
         private const float frequency = 0.005f;
-        private const float pointFrequency = 0.005f;
+        private const float pointFrequency = 0.003f;
         private const float minDistance = 0.015f;
         private const float particleFrequency = 0.0001f;
 
@@ -155,7 +155,7 @@ namespace MusicWall3D
         public void Run()
         {
             form = new RenderForm("ComposIt");
-            form.ClientSize = new Size(1380, 768);
+            form.ClientSize = new Size(1920, 1080);
             //TODO
             sound = new Sound(form.Handle);
 
@@ -212,7 +212,7 @@ namespace MusicWall3D
 
             PresentationParameters pp = new PresentationParameters(desc.ModeDescription.Width,desc.ModeDescription.Height,desc.OutputHandle,desc.ModeDescription.Format);
             pp.MultiSampleCount = MSAALevel.X8;
-            pp.IsFullScreen = false;
+            pp.IsFullScreen = true;
             
             graphicsDevice.Presenter = new SwapChainGraphicsPresenter(graphicsDevice,pp);
 
@@ -509,6 +509,7 @@ namespace MusicWall3D
 
                         objects.Add(o);
                     }
+
                     sound.addCurve(currentPoints);
 
                     currentPoints.Clear();
