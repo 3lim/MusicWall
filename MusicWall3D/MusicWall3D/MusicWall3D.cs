@@ -570,16 +570,16 @@ namespace MusicWall3D
                 {
                     Vector2 l = o.Position;
                     float xTL = (float)((tmp.TotalMilliseconds % 10000) / (float)(10000));
-                    if (Math.Abs(l.X - xTL) <= pointFrequency/5)
+                    if (Math.Abs(l.X - xTL) <= pointFrequency)
                     {
                         if (splines[o.SplineId].pointList.Count < 2)
                         {
-                            for (int j = 0; j < 10; j++)
+                            for (int j = 0; j < 2; j++)
                             {
                                 pSystem.addParticle(l.X, l.Y, 4, o.ObjectColor);
                             }
                         }
-                        else
+                        else if (Math.Abs(l.X - xTL) <= pointFrequency/10)
                         {
                             for (int j = 0; j < 1; j++)
                             {
