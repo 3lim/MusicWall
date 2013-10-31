@@ -8,6 +8,8 @@ using SharpDX;
 //using SharpDX.D3DCompiler;
 using SharpDX.Toolkit;
 using SharpDX.Toolkit.Graphics;
+using MusicWall3D;
+
 namespace ParticleLibrary
 {
     class ParticleSystem
@@ -26,13 +28,13 @@ namespace ParticleLibrary
             int i = ran.Next(1, 100);
             if (type != 4)
             {
-                pSystem.Add(new Glitter(x, y, 400, i, type, cType));
+                pSystem.Add(new Glitter(x, y, 300, i, type, cType));
             }
 
             else
             {
 
-                pSystem.Add(new Fireworks(x, y, 400, i, type, cType));
+                pSystem.Add(new Fireworks(x, y, 300, i, type, cType));
 
             }
         }

@@ -176,7 +176,7 @@ float4 BasicPS(VSOutputPixelLighting pin) : SV_Target0
 	AddSpecular(color, lightResult.Specular);
 	ApplyFog(color, pin.PositionWS.w);
 	
-	return color;
+	return float4(color.xyz,pin.Diffuse.w);
 }
 
 RasterizerState rsCullBack {
@@ -187,7 +187,7 @@ DepthStencilState EnableDepth
 {
 	DepthEnable = TRUE;
 	DepthWriteMask = ALL;
-	DepthFunc = LESS;
+	DepthFunc = LESS_EQUAL;
 };
 
 BlendState NoBlending
@@ -196,6 +196,15 @@ BlendState NoBlending
 	BlendEnable[0] = FALSE;
 };
 
+BlendState BSBlendOver 
+{ 
+	BlendEnable[0]    = TRUE; 
+	SrcBlend[0]       = SRC_ALPHA; 
+	SrcBlendAlpha[0]  = ONE; 
+	DestBlend[0]      = INV_SRC_ALPHA; 
+	DestBlendAlpha[0] = INV_SRC_ALPHA; 
+}; 
+
 technique11 Render
 {
 	pass Basic
@@ -203,5 +212,8 @@ technique11 Render
 		SetVertexShader(CompileShader(vs_4_0, BasicVS()));
 		SetGeometryShader(NULL);
 		SetPixelShader(CompileShader(ps_4_0, BasicPS()));
+
+		SetDepthStencilState(EnableDepth, 0);
+		SetBlendState(BSBlendOver, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
 	}
 }

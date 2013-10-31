@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using System.Drawing;
-using Point = System.Windows.Point;
 
 namespace MusicWall3D
 {
@@ -51,101 +47,143 @@ namespace MusicWall3D
             y1 = (y3 - (1 - t) * (1 - t) * y0 - t * t * y2) / (2 * t * (1 - t));
         }
 
-        static public void BezierFromIntersection(PathFigure p, Point startPt, Point int1, Point int2, Point endPt)
+        static SharpDX.Vector2 InterpolateSpline(float t, SharpDX.Vector2 p0, SharpDX.Vector2 p1, SharpDX.Vector2 p2, SharpDX.Vector2 p3)
         {
-            double x1, y1, x2, y2;
-            bez4pts1(startPt.X, startPt.Y, int1.X, int1.Y, int2.X, int2.Y, endPt.X, endPt.Y, out x1, out y1, out x2, out y2);
-            p.Segments.Add(new BezierSegment { Point1 = new Point(x1, y1), Point2 = new Point(x2, y2), Point3 = endPt });
+            float cx = 3 * (p1.X - p0.X);
+            float bx = 3 * (p2.X - p1.X) - cx;
+            float ax = p3.X - p0.X - cx - bx;
+
+            float cy = 3 * (p1.Y - p0.Y);
+            float by = 3 * (p2.Y - p1.Y) - cy;
+            float ay = p3.Y - p0.Y - cy - by;
+
+            float tSquared = t * t;
+            float tCubed = tSquared * t;
+            float resultX = (ax * tCubed) + (bx * tSquared) + (cx * t) + p0.X;
+            float resultY = (ay * tCubed) + (by * tSquared) + (cy * t) + p0.Y;
+
+            return new SharpDX.Vector2(resultX, resultY);
         }
 
-        static public void QuadraticBezierFromIntersection(PathFigure p, Point startPt, Point int1, Point endPt)
+        static SharpDX.Vector2 InterpolateLine(float t, SharpDX.Vector2 p0, SharpDX.Vector2 p1)
         {
-            double x1, y1;
-            bez3pts1(startPt.X, startPt.Y, int1.X, int1.Y, endPt.X, endPt.Y, out x1, out y1);
-            p.Segments.Add(new QuadraticBezierSegment { Point1 = new Point(x1, y1), Point2 = endPt });
+            return p0+t*(p1 - p0);
         }
 
-        private PathGeometry pGeo;
+        private struct Segment
+        {
+            public SharpDX.Vector2? p0;
+            public SharpDX.Vector2? p1;
+            public SharpDX.Vector2? p2;
+            public SharpDX.Vector2? p3;
 
-        public List<Point> pointList
+            public SharpDX.Vector2 sample(float t)
+            {
+                if (p2 == null) return InterpolateLine(t, (SharpDX.Vector2)p0, (SharpDX.Vector2)p1);
+                else return InterpolateSpline(t, (SharpDX.Vector2)p0, (SharpDX.Vector2)p1, (SharpDX.Vector2)p2, (SharpDX.Vector2)p3);
+            }
+        }
+
+        private List<Segment> segments;
+
+        public List<SharpDX.Vector2> pList
         { get; private set; }
 
         private float lastFrequency = 0.01f;
         private List<SharpDX.Vector2> lastSampled;
         float lastDist = 0.0f;
+        int lastSegmentSampled = 0;
 
         public Spline(float startX, float startY)
         {
-            pointList = new List<Point>();
+            pList = new List<SharpDX.Vector2>();
+            pList.Add(new SharpDX.Vector2(startX, startY));
+            segments = new List<Segment>();
+
             lastSampled = new List<SharpDX.Vector2>();
-            pointList.Add(new Point(startX, startY));
-            pGeo = new PathGeometry();
-            pGeo.Figures.Add(new PathFigure { StartPoint = new Point(startX, startY) });
+            lastSampled.Add(new SharpDX.Vector2(startX, startY));
         }
 
-        public void addPoint(float x,float y)
+        public void addPoint(float x, float y)
         {
-            pointList.Add(new Point(x, y));
+            pList.Add(new SharpDX.Vector2(x,y));
+            //pointList.Add(new Point(x, y));
 
-            if ((pointList.Count-1) % 3 == 1)
+            if ((pList.Count - 1) % 3 == 1)
             {
-                pGeo.Figures[0].Segments.Add(new LineSegment(new Point(x, y), false));
+                segments.Add(new Segment { p0 = pList[pList.Count - 2], p1 = pList[pList.Count - 1] });
+                //pGeo.Figures[0].Segments.Add(new LineSegment(new Point(x, y), false));
             }
 
-            if ((pointList.Count - 1) % 3 == 2)
+            if ((pList.Count - 1) % 3 == 2)
             {
-                pGeo.Figures[0].Segments.RemoveAt(pGeo.Figures[0].Segments.Count - 1);
+                segments.RemoveAt(segments.Count - 1);
+                //pGeo.Figures[0].Segments.RemoveAt(pGeo.Figures[0].Segments.Count - 1);
 
-                QuadraticBezierFromIntersection(pGeo.Figures[0], pointList[pointList.Count - 3], pointList[pointList.Count - 2], pointList[pointList.Count - 1]);
+                double x1, y1;
+                bez3pts1(pList[pList.Count - 3].X, pList[pList.Count - 3].Y, pList[pList.Count - 2].X, pList[pList.Count - 2].Y, pList[pList.Count - 1].X, pList[pList.Count - 1].Y, out x1, out y1);
+                
+                SharpDX.Vector2 oldp1 = new SharpDX.Vector2((float)x1,(float)y1);
+                SharpDX.Vector2 newp1 = 1.0f/3.0f*pList[pList.Count - 3] + 2.0f/3.0f*oldp1;
+                SharpDX.Vector2 newp2 = 2.0f/3.0f*oldp1 + 1.0f/3.0f*pList[pList.Count - 1];
+
+                segments.Add(new Segment { p0 = pList[pList.Count - 3], p1 = newp1, p2 = newp2, p3 = pList[pList.Count - 1] });
+                //QuadraticBezierFromIntersection(pGeo.Figures[0], pointList[pointList.Count - 3], pointList[pointList.Count - 2], pointList[pointList.Count - 1]);
             }
 
-            if ((pointList.Count - 1) % 3 == 0)
+            if ((pList.Count - 1) % 3 == 0)
             {
-                pGeo.Figures[0].Segments.RemoveAt(pGeo.Figures[0].Segments.Count - 1);
+                segments.RemoveAt(segments.Count - 1);
+                //pGeo.Figures[0].Segments.RemoveAt(pGeo.Figures[0].Segments.Count - 1);
 
-                BezierFromIntersection(pGeo.Figures[0], pointList[pointList.Count - 4], pointList[pointList.Count - 3], pointList[pointList.Count - 2], pointList[pointList.Count - 1]);
+                double x1, y1, x2, y2;
+                bez4pts1(pList[pList.Count - 4].X, pList[pList.Count - 4].Y, pList[pList.Count - 3].X, pList[pList.Count - 3].Y, pList[pList.Count - 2].X, pList[pList.Count - 2].Y, pList[pList.Count - 1].X, pList[pList.Count - 1].Y, out x1, out y1, out x2, out y2);
+
+                segments.Add(new Segment { p0 = pList[pList.Count - 4], p1 = new SharpDX.Vector2((float)x1, (float)y1), p2 = new SharpDX.Vector2((float)x2, (float)y2), p3 = pList[pList.Count - 1] });
+                //BezierFromIntersection(pGeo.Figures[0], pointList[pointList.Count - 4], pointList[pointList.Count - 3], pointList[pointList.Count - 2], pointList[pointList.Count - 1]);
             }
 
         }
 
         public List<SharpDX.Vector2> sample(float frequency)
         {
-            List<SharpDX.Vector2> ret = new List<SharpDX.Vector2>();
-            Point lastPoint = pGeo.Figures[0].StartPoint;
-            ret.Add(new SharpDX.Vector2((float)lastPoint.X,(float)lastPoint.Y));
+            
+            List<SharpDX.Vector2> ret = new List<SharpDX.Vector2>(lastSampled);
+            
+            SharpDX.Vector2 lastPoint = lastSampled[lastSampled.Count-1];
 
-            if (pointList.Count == 1) return ret;
+            //ret.Add(lastPoint);
 
-            //float xD = (float)pointList[pointList.Count - 1].X - lastSampled[lastSampled.Count - 1].X;
-            //float yD = (float)pointList[pointList.Count - 1].Y - lastSampled[lastSampled.Count - 1].Y;
+            if (pList.Count == 1) return ret;
 
-            //float nDist = (float)Math.Sqrt(xD * xD + yD * yD);
-            float fraction = 0.0f;// nDist / (lastDist + nDist) * 0.8f;
+            float fraction = lastSegmentSampled / (float)segments.Count;
 
+            int currentSegment = lastSegmentSampled;
             while (fraction + lastFrequency <= 1.0f)
             {
-                Point currentP,currentT;
+                currentSegment += fraction + lastFrequency > (currentSegment + 1) / (float)segments.Count ? 1 : fraction + lastFrequency < currentSegment / (float)segments.Count ? -1 : 0;
+                
+                SharpDX.Vector2 nP = segments[currentSegment].sample((fraction + lastFrequency - currentSegment / (float)segments.Count) * (float)segments.Count);
+                
+                SharpDX.Vector2 d = nP - lastPoint;
 
-                pGeo.GetPointAtFractionLength((double)(fraction + lastFrequency), out currentP, out currentT);
-
-                Vector dist = currentP - lastPoint;
-
-                if (Math.Abs(dist.Length - frequency) <= frequency / 4)
+                if (Math.Abs(d.Length() - frequency) <= frequency / 4.0f)
                 {
-                    ret.Add(new SharpDX.Vector2((float)currentP.X, (float)currentP.Y));
+                    if(currentSegment != segments.Count-1) lastSampled.Add(new SharpDX.Vector2((float)nP.X, (float)nP.Y));
+
+                    ret.Add(new SharpDX.Vector2((float)nP.X, (float)nP.Y));
                     fraction += lastFrequency;
-                    lastDist += (float)dist.Length;
-                    lastPoint = currentP;
+                    lastDist += (float)d.Length();
+                    lastPoint = nP;
                 }
                 else
                 {
-                    lastFrequency *= (dist.Length > frequency) ? 0.5f : 1.5f;
+                    lastFrequency *= (d.Length() > frequency) ? 0.5f : 1.5f;
                 }
             }
 
-            Point t;
-            pGeo.GetPointAtFractionLength(1.0, out lastPoint, out t);
-            ret.Add(new SharpDX.Vector2((float)lastPoint.X, (float)lastPoint.Y));
+            lastSegmentSampled = currentSegment;
+            ret.Add(pList[pList.Count - 1]);
 
             return ret;
         }

@@ -53,6 +53,20 @@ namespace MusicWall3D
             public SharpDX.Toolkit.Graphics.Buffer<InstanceType> InstanceBuffer;
             public List<InstanceType> Instances;
             public int InstanceCount;
+            public List<int> DeletedInstances;
+
+            public int GetInstanceId(int instanceId)
+            {
+                DeletedInstances.Sort();
+
+                int i = 0;
+                for (; i < DeletedInstances.Count; i++)
+                {
+                    if (DeletedInstances[i] >= instanceId) break;
+                }
+
+                return instanceId - i;
+            }
         }
 
         #region Primitives
@@ -67,6 +81,81 @@ namespace MusicWall3D
                     new Vector3(0, 1, 0),
                     new Vector3(0, -1, 0),
                 };
+
+        public static Primitive CreateSphere(GraphicsDevice device)
+        {
+            Primitive p = new Primitive();
+            float diameter = 1.0f;
+            int tessellation = 16;
+
+            int verticalSegments = tessellation;
+            int horizontalSegments = tessellation * 2;
+
+            var vertices = new VertexIn[(verticalSegments + 1) * (horizontalSegments + 1)];
+            var indices = new int[(verticalSegments) * (horizontalSegments + 1) * 6];
+
+            float radius = diameter / 2;
+
+            int vertexCount = 0;
+            // Create rings of vertices at progressively higher latitudes.
+            for (int i = 0; i <= verticalSegments; i++)
+            {
+                float v = 1.0f - (float)i / verticalSegments;
+
+                var latitude = (float)((i * Math.PI / verticalSegments) - Math.PI / 2.0);
+                var dy = (float)Math.Sin(latitude);
+                var dxz = (float)Math.Cos(latitude);
+
+                // Create a single ring of vertices at this latitude.
+                for (int j = 0; j <= horizontalSegments; j++)
+                {
+                    float u = (float)j / horizontalSegments;
+
+                    var longitude = (float)(j * 2.0 * Math.PI / horizontalSegments);
+                    var dx = (float)Math.Sin(longitude);
+                    var dz = (float)Math.Cos(longitude);
+
+                    dx *= dxz;
+                    dz *= dxz;
+
+                    var normal = new Vector3(dx, dy, dz);
+                    var textureCoordinate = new Vector2(u, v);
+
+                    vertices[vertexCount++] = new VertexIn() { Position = normal * radius, Normal = normal };
+                }
+            }
+
+            // Fill the index buffer with triangles joining each pair of latitude rings.
+            int stride = horizontalSegments + 1;
+
+            int indexCount = 0;
+            for (int i = 0; i < verticalSegments; i++)
+            {
+                for (int j = 0; j <= horizontalSegments; j++)
+                {
+                    int nextI = i + 1;
+                    int nextJ = (j + 1) % stride;
+
+                    indices[indexCount++] = (i * stride + j);
+                    indices[indexCount++] = (nextI * stride + j);
+                    indices[indexCount++] = (i * stride + nextJ);
+
+                    indices[indexCount++] = (i * stride + nextJ);
+                    indices[indexCount++] = (nextI * stride + j);
+                    indices[indexCount++] = (nextI * stride + nextJ);
+                }
+            }
+
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                Utilities.Swap(ref indices[i], ref indices[i + 2]);
+            }
+
+            p.IndexBuffer = SharpDX.Toolkit.Graphics.Buffer.Index.New(device, indices);
+            p.VertexBuffer = SharpDX.Toolkit.Graphics.Buffer.Vertex.New(device, vertices);
+
+            return p;
+        }
 
         public static Primitive CreateCube(GraphicsDevice device)
         {
@@ -276,7 +365,9 @@ namespace MusicWall3D
 
         public void ResetInstances(Primitive p)
         {
-            instanceData[p].Instances.Clear();
+            if (!instanceData.ContainsKey(p)) return;
+
+            //instanceData[p].Instances.Clear();
             instanceData[p].InstanceCount = 0;
         }
 
@@ -284,14 +375,14 @@ namespace MusicWall3D
         {
             if (!instanceData.ContainsKey(p)) InitializeBuffers(p);
 
-            int instanceId = instanceData[p].InstanceCount;
+            int instanceId = instanceData[p].InstanceCount;// +instanceData[p].DeletedInstances.Count;
 
             t.World.Transpose();
             
             instanceData[p].Instances[instanceId] = t;
             instanceData[p].InstanceCount++;
 
-            toAdd[p].Add(instanceId);
+            toAdd[p].Add(instanceId);//instanceData[p].GetInstanceId(instanceId));
 
             invalidateData = true;
 
@@ -300,6 +391,8 @@ namespace MusicWall3D
 
         public void ModifyInstance(Primitive p, int instanceId, InstanceType t)
         {
+            //instanceId = instanceData[p].GetInstanceId(instanceId);
+
             instanceData[p].Instances[instanceId] = t;
 
             toModify[p].Add(instanceId);
@@ -309,6 +402,8 @@ namespace MusicWall3D
 
         public void ModifyInstance(Primitive p, int instanceId, Matrix? world = null, Vector4? color = null)
         {
+            //instanceId = instanceData[p].GetInstanceId(instanceId);
+
             InstanceType t = instanceData[p].Instances[instanceId];
             if (world != null)
             {
@@ -331,6 +426,9 @@ namespace MusicWall3D
 
         public void RemoveFromRenderPass(Primitive p, int instanceId)
         {
+            //int rInstanceId = instanceData[p].GetInstanceId(instanceId);
+            //instanceData[p].DeletedInstances.Add(instanceId);
+
             instanceData[p].Instances.RemoveAt(instanceId);
             instanceData[p].Instances.Add(new InstanceType());
             instanceData[p].InstanceCount--;
@@ -348,6 +446,7 @@ namespace MusicWall3D
             a.Initialize();
             instanceData[p].Instances = a.ToList();
             instanceData[p].InstanceCount = 0;
+            instanceData[p].DeletedInstances = new List<int>();
 
             instanceData[p].InstanceBuffer = ToDispose(SharpDX.Toolkit.Graphics.Buffer.New(device,a,BufferFlags.VertexBuffer,ResourceUsage.Dynamic));
 
