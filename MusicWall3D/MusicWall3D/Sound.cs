@@ -367,10 +367,10 @@ namespace MusicWall3D
             // Lock the buffer
             DataStream dataPart2;
             var dataPart1 = secondarySoundBuffer.Lock(0, capabilities.BufferBytes, LockFlags.EntireBuffer, out dataPart2);
-            foreach (short value in sounds)
+            foreach (short val in sounds)
             {
-                dataPart1.Write(value);
-                dataPart1.Write(value);
+                dataPart1.Write(val);
+                dataPart1.Write(val);
             }
             // Unlock the buffer
             secondarySoundBuffer.Unlock(dataPart1, dataPart2);
