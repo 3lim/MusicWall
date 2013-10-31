@@ -68,7 +68,7 @@ namespace MusicWall3D
         private float lastEvent = 0.0f;
         private const float frequency = 0.005f;
         private const float pointFrequency = 0.003f;
-        private const float minDistance = 0.005f;
+        private const float minDistance = 0.010f;
         private const float particleFrequency = 0.0001f;
 
         private Color[] colorList = new Color[] {Color.MediumPurple, Color.Purple, Color.Black};
@@ -92,7 +92,7 @@ namespace MusicWall3D
 
         private Color4[] palette2 = new Color4[4];
 
-        private int paletteColor = 3; //which color to draw with
+        private int paletteColor = 2; //which color to draw with
 
         // GRADIENT BACKGROUND
         private GeometricPrimitive backgroundElt;
@@ -221,8 +221,8 @@ namespace MusicWall3D
             Cursor.Hide();//Hides cursor
 
             PresentationParameters pp = new PresentationParameters(desc.ModeDescription.Width,desc.ModeDescription.Height,desc.OutputHandle,desc.ModeDescription.Format);
-            pp.MultiSampleCount = MSAALevel.X8;
-            pp.IsFullScreen = false;
+            pp.MultiSampleCount = MSAALevel.X4;
+            pp.IsFullScreen = true;
             
             graphicsDevice.Presenter = new SwapChainGraphicsPresenter(graphicsDevice,pp);
 
@@ -241,6 +241,7 @@ namespace MusicWall3D
             {
                 if (exit)
                 {
+                    form.Close();
                     Dispose();
                     Application.Exit();
                 }
@@ -337,9 +338,7 @@ namespace MusicWall3D
         }
 
         protected void Update(GameTime gameTime)
-        {
-            //TODO
-            PlaySounds();            
+        {          
 
 
             basicEffect.View = view;
@@ -697,13 +696,13 @@ namespace MusicWall3D
                 for (int i = 0; i < objects.Count; i++)
                 {
 
-                        if (objects[i].Position.X < xTL - particleFrequency)
+                    if (Math.Abs(objects[i].Position.X - xTL) <= 0.18 && objects[i].Position.X <= xTL + 0.006)
                         {
-                            //instancedGeo.ModifyInstance(cylinder,objects[i].InstanceId,null,new Color4(255, 255, 255, 255));
+                            instancedGeo.ModifyInstance(cylinder, objects[i].InstanceId, null, new Vector4((Vector3)pickColor((float)objects[i].Position.Y, objects[i].ObjectColor), 0.0f + (float)Math.Pow(Math.Abs(objects[i].Position.X - xTL) / 0.18f,2.0) * 0.7f));//(float)Math.Pow(1.0f-(Math.Abs(xTL-objects[i].Position.X))/xTL,4.0)));
                         }
                         else
                         {
-                            //instancedGeo.ModifyInstance(cylinder, objects[i].InstanceId, null, (Vector4)pickColor((float)objects[i].Position.Y,objects[i].ObjectColor));
+                            instancedGeo.ModifyInstance(cylinder, objects[i].InstanceId, null, new Vector4((Vector3)pickColor((float)objects[i].Position.Y,objects[i].ObjectColor),0.7f));
                         }
 
 

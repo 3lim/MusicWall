@@ -174,7 +174,7 @@ float4 BasicPS(VSOutputPixelLighting pin) : SV_Target0
 	color.rgb *=  lightResult.Diffuse;
 	
 	AddSpecular(color, lightResult.Specular);
-	ApplyFog(color, pin.PositionWS.w);
+	//ApplyFog(color, pin.PositionWS.w);
 	
 	return float4(color.xyz,pin.Diffuse.w);
 }
