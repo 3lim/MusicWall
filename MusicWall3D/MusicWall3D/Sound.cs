@@ -347,13 +347,22 @@ namespace MusicWall3D
                 return 0;
         }
 
+        //Function for adding a new sound to the soundbuffer.
         private void SetBuffer(ref short[] tmpSound)
         {
             soundStack.Push((short[])sounds.Clone());
             //tmpSound = lowPass(ref tmpSound, 1000);
+            int value;
             for (int j = 0; j < sounds.Length; j++)
             {
-                sounds[j] = (short)((int)sounds[j] + (int)tmpSound[j] - (int)(sounds[j] * tmpSound[j]) / short.MaxValue);
+                value = ((int)sounds[j] + (int)tmpSound[j] - (int)(sounds[j] * tmpSound[j]) / short.MaxValue);
+                //Test if the value is bigger then a short, if so set it to maximum value for a short
+                if(value > short.MaxValue)
+                    value = short.MaxValue;
+                //Same thing for negative values.
+                else if(value < short.MinValue)
+                    value = short.MinValue;
+                sounds[j] = (short)value;
             }
             // Lock the buffer
             DataStream dataPart2;
