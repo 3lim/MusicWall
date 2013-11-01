@@ -116,12 +116,15 @@ namespace MusicWall3D
                 case 2:
                     addSquare(points);
                     break;
-                default:
+                case 1:
                     addSine(points);
+                    break;
+                default:
+                    addMajor(points);
                     break;
             }
         }
-        public void addSine(List<Vector2> points)
+        public void addMajor(List<Vector2> points)
         {
                     if (points.Count == 0) return;
 
@@ -178,7 +181,7 @@ namespace MusicWall3D
                                 //int power = (int)(p.Y * 7);
                                 //power = test[power];
                                 freq = (int)(440 * Math.Pow(a, power));
-                                amp = Math.Pow(2.0, 1 + p.Y);
+                                amp = Math.Pow(2.0, 1 + p.Y)*5;
 
                             }
                         }
@@ -188,6 +191,71 @@ namespace MusicWall3D
                     }
             
         }
+
+        public void addSine(List<Vector2> points)
+        {
+            if (points.Count == 0) return;
+
+            int i = 0;
+            int freq = -1;
+            double amp = 0;
+            lastFreq = -1;
+            lastVal = -1;
+            int numberOfSamples = capabilities.BufferBytes / waveFormat.BlockAlign;
+            var tmpSound = new short[sounds.Length];
+
+            //Debug.WriteLine(points.Count);
+            if (points.Count < 7)
+            {
+                Note(points[0]);
+            }
+            else
+            {
+                Wave waveInfo = new Wave { lastVal = -1, lastFreq = -1, offset = 1 };
+                waveInfo.offset = (int)(points[0].X * numberOfSamples);
+                foreach (Vector2 p in points)
+                {
+                    if (p.X <= 1 && p.X >= 0)
+                    {
+                        if (i < p.X * numberOfSamples)
+                        {
+                            while (i < p.X * numberOfSamples)
+                            {
+                                if (freq != -1)
+                                {
+                                    short value = (short)(smoothCurve(freq, i, true, ref waveInfo) * amp);
+                                    tmpSound[i] = (short)((int)value + (int)tmpSound[i] - (int)(value * tmpSound[i]) / short.MaxValue);
+                                }
+                                i++;
+                            }
+                        }
+                        else if (i > p.X * numberOfSamples)
+                        {
+                            while (i > p.X * numberOfSamples)
+                            {
+                                if (freq != -1)
+                                {
+                                    short value = (short)(smoothCurve(freq, i, false, ref waveInfo) * amp);
+                                    tmpSound[i] = (short)((int)value + (int)tmpSound[i] - (int)(value * tmpSound[i]) / short.MaxValue);
+                                }
+                                i--;
+                            }
+
+                        }
+                        double a = Math.Pow(2.0, 1.0 / 12.0);
+                        double power = (-p.Y * 3 * 12);
+                        freq = (int)(880 * Math.Pow(a, power));
+                        amp = Math.Pow(2.0, 1 + p.Y)*5;
+
+                    }
+                }
+                backPass(ref tmpSound, i - 1);
+                tmpSound = lowPass(ref tmpSound, 1000);
+                SetBuffer(ref tmpSound);
+            }
+
+        }
+
 
         public void addSquare(List<Vector2> points)
         {
@@ -379,6 +447,7 @@ namespace MusicWall3D
         public void Clear()
         {
             sounds = new short[sounds.Length];
+            soundStack.Clear();
             // Lock the buffer
             DataStream dataPart2;
             var dataPart1 = secondarySoundBuffer.Lock(0, capabilities.BufferBytes, LockFlags.EntireBuffer, out dataPart2);
@@ -537,7 +606,7 @@ namespace MusicWall3D
             {
                 short value = (short)(smoothCurve(freq, i, true, ref waveInfo1) * 2);
                 value += smoothCurve(freq * 2, i, true, ref waveInfo2);
-                value = (short)(value * Math.Pow(2, 1 + point.Y));
+                value = (short)(value * Math.Pow(2, 1 + point.Y)*4);
                 value = (short)(value * (float)(10000 - j) / 10000.0f);
                 tmpSound[i] = value;
                 i++;

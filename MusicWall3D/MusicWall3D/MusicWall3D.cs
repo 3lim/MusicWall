@@ -172,6 +172,8 @@ namespace MusicWall3D
             form.KeyDown += (target, arg) =>
             {
                 if (arg.KeyCode == System.Windows.Forms.Keys.Escape) exit = true;
+                if (arg.KeyCode == System.Windows.Forms.Keys.Enter) ClearScreen();
+
             };
 
             form.MouseMove += (target, arg) =>
@@ -599,6 +601,21 @@ namespace MusicWall3D
 
             
 
+        }
+
+        private void ClearScreen() {
+            objectColor.Clear();
+            sound.Clear();
+
+            for (int i = 0; i < objects.Count; i++)
+            {
+                instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+            }
+
+            objects.Clear();
+            splines.Clear();
+
+            currentPoints = new List<Vector2>(); 
         }
 
         //TODO
