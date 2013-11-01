@@ -393,6 +393,23 @@ namespace MusicWall3D
 
             // KINECT END
 
+            if (mouseState.middle)
+            {
+
+                objectColor.Clear();
+                sound.Clear();
+
+                for(int i = 0; i < objects.Count; i++)
+                {
+                    instancedGeo.RemoveFromRenderPass(cylinder, objects[i].InstanceId);
+                }       
+
+                objects.Clear();
+                splines.Clear();
+
+                currentPoints = new List<Vector2>();
+            }
+
             if (mouseState.right) //Undo the last curve.
             {
                 /*                if (gameTime.TotalGameTime.TotalSeconds - lastRemoveEvent >= frequency && (new Vector2(mouseState.X,mouseState.Y)-lastPosition).Length() >= minDistance)
