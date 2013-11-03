@@ -80,6 +80,8 @@ namespace MusicWall3D
         private GeometricPrimitive fireWork;
         private InstancedGeometricPrimitive.Primitive fwInstanced; //Sphere
 
+        private InstancedGeometricPrimitive.Primitive glowInstanced; // Cylinder
+
         private GeometricPrimitive paletteCube;
 
         private InstancedGeometricPrimitive.Primitive cylinder;
@@ -272,6 +274,10 @@ namespace MusicWall3D
             fwInstanced = InstancedGeometricPrimitive.CreateSphere(graphicsDevice);
             fwInstanced.IndexBuffer = ToDispose(fwInstanced.IndexBuffer);
             fwInstanced.VertexBuffer = ToDispose(fwInstanced.VertexBuffer);
+
+            glowInstanced = InstancedGeometricPrimitive.CreateCylinder(graphicsDevice);
+            glowInstanced.IndexBuffer = ToDispose(glowInstanced.IndexBuffer);
+            glowInstanced.VertexBuffer = ToDispose(glowInstanced.VertexBuffer);
 
             paletteCube = ToDispose(GeometricPrimitive.Cube.New(graphicsDevice));
 
@@ -808,6 +814,15 @@ namespace MusicWall3D
                         primitive.Draw(basicEffect);
                     }*/
 
+
+            for (int l = 0; l < currentPoints.Count; l++)
+            {
+
+               drawPoint(new Vector3(currentPoints[l], 5.0f), (Vector4)pickColor(currentPoints[l].Y, paletteColor));
+
+            }
+
+
             /**PARTICLE DRAW********************************************************************/
             foreach (Particle p in pSystem.getList())
             {
@@ -815,12 +830,35 @@ namespace MusicWall3D
                 {
                     for (int k = 0; k < 10; k++)
                     {
+                        Vector3 pos = new Vector3(p.getX() - (p.velocity.X * (k * 2)), p.getY() - (p.velocity.Y * (k * 2)), 5.0f);
+
+                        // Glow effect ---------->
+                        float glowSize = 0.42f - k*0.03f;
+                        float deltaGlow = glowSize / 10;
+                        for (int i = 0; i < 8; i++)
+                        {
+                            InstancedGeometricPrimitive.InstanceType glowT = new InstancedGeometricPrimitive.InstanceType();
+                            glowT.World = Matrix.Scaling(glowSize, 0.02f, glowSize) *
+                                Matrix.RotationX(deg2rad(90)) *
+                                Matrix.RotationY(0) *
+                                Matrix.RotationZ(0) *
+                                Matrix.Translation(screenToWorld(pos, basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                                                    + new Vector3(0, 0, 0.03f));
+
+                            glowT.Color = p.getColor();
+                            glowT.Color.W = p.lifespan / 300.0f * (0.02f + i * i * 0.003f);
+
+                            instancedGeo.AddToRenderPass(glowInstanced, glowT);
+
+                            glowSize -= deltaGlow;
+                        }
+
                         InstancedGeometricPrimitive.InstanceType t = new InstancedGeometricPrimitive.InstanceType();
                         t.World = Matrix.Scaling((0.08f - k*0.01f), (0.08f - k*0.01f), (0.08f - k*0.01f)) *
                             Matrix.RotationX(p.getRotationX()) *
                             Matrix.RotationY(p.getRotationY()) *
                             Matrix.RotationZ(p.getRotationZ()) *
-                            Matrix.Translation(screenToWorld(new Vector3(p.getX() - (p.velocity.X * (k*2)), p.getY() - (p.velocity.Y * (k*2)), 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
+                            Matrix.Translation(screenToWorld(pos, basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport));
                         t.Color = p.getColor();
                         t.Color.W = p.lifespan / 300.0f;
 
@@ -841,6 +879,27 @@ namespace MusicWall3D
                 }
                 else
                 {
+                    // Glow effect ---------->
+                    float glowSize = 0.42f;
+                    for(int i=0; i<8; i++)
+                    {
+                        InstancedGeometricPrimitive.InstanceType glowT = new InstancedGeometricPrimitive.InstanceType();
+                        glowT.World = Matrix.Scaling(glowSize, 0.02f, glowSize) *
+                            Matrix.RotationX(deg2rad(90)) *
+                            Matrix.RotationY(0) *
+                            Matrix.RotationZ(0) *
+                            Matrix.Translation(screenToWorld(new Vector3(p.getX(), p.getY(), 5.0f), basicEffect.View, basicEffect.Projection, Matrix.Identity, graphicsDevice.Viewport)
+                                                + new Vector3(0, 0, 0.03f));
+
+                        glowT.Color = p.getColor();
+                        glowT.Color.W = p.lifespan / 300.0f * (0.02f + i*i*0.003f);
+
+                        instancedGeo.AddToRenderPass(glowInstanced, glowT);
+
+                        glowSize -= 0.04f;
+                    }
+                   
+
                     InstancedGeometricPrimitive.InstanceType t = new InstancedGeometricPrimitive.InstanceType();
                     t.World = Matrix.Scaling(0.08f, 0.08f, 0.08f) *
                     Matrix.RotationX(p.getRotationX()) *
@@ -870,6 +929,7 @@ namespace MusicWall3D
             instancedGeo.Draw();
 
             instancedGeo.ResetInstances(gInstanced);
+            instancedGeo.ResetInstances(glowInstanced);
             instancedGeo.ResetInstances(fwInstanced);
             /**END PARTICLE DRAW********************************************************************/
 
@@ -886,12 +946,7 @@ namespace MusicWall3D
             primitive.Draw(basicEffect);*/
 
 
-            for (int l = 0; l < currentPoints.Count; l++)
-            {
-
-                drawPoint(new Vector3(currentPoints[l], 5.0f), (Vector4)pickColor(currentPoints[l].Y, paletteColor));
-
-            }
+            
 
             // ----- TIME LINE --------------------
            /* TimeSpan tmp = stopWatch.Elapsed;
